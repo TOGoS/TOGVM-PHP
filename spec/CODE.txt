@@ -1,0 +1,27 @@
+  23 + 45
+
+Or
+
+  '+'( 23, 45 )
+
+Compiles to
+
+{
+	"className": "FunctionApplication",
+	"function": {
+		"className": "ObjectByURI",
+		"allowFetching": false,     # Don't allow downloading from this URI to determine its meaning
+		"uri": "http://ns.nuke24.net/TOGVM/Functions/Add"
+	},
+	"allowCurrying": false,             # Either evaluate it entirely or throw a 'not enough arguments' error
+	"arguments": [
+		{
+			"className": "Constant",
+			"value": 23
+		},
+		{
+			"className": "Constant",
+			"value": 45
+		}
+	]
+}

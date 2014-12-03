@@ -1,0 +1,48 @@
+Can Monads be translated to CPS?
+
+  function printHelloWorld( emitter ) {
+    emitter("Hello")
+    emitter("World")
+  }
+
+CPS...
+
+  Procedure X = X -> Segment
+  Function X Y = Procedure (X, Procedure Y)
+  Segment = () -> [Segment]
+  Emitter X = Function X () # i.e. Procedure (X, Procedure ())
+  
+  printHelloWorld : Function Emitter () # i.e. Procedure (Emitter String, Procedure ())
+    (emitter, returnProcedure) ->
+      emitter ("Hello", (emitter ("World", returnProcedure)))
+    emitter returnSegment -> 
+
+Monads:
+
+  Let's say there's an 'emit' function like emit :: Emitter -> String -> IO ()
+
+  printHelloWorld :: IO ()
+  printHelloWorld emitter =
+    emit emitter "Hello" >>
+    emit emitter "World"
+
+Back to CPS...
+
+  So Segments are basically IO ()s that never return (segment >> segment is meaningless).
+  Procedures are functions that return IO ()s which never return.
+  Functions are functions that take a returnTo :: IO () and return IO ()s that include the returnTo.
+
+
+
+
+
+  # Lazy assignment
+  somevar = urn:sha1:blah
+  # somevar is now a future
+  # references to it will wait for the value to appear
+  # if it's not already cached.
+  
+  # Things to do to variables...
+  # Ensure that a variable has a value
+  validate(somevar)
+  

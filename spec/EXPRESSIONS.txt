@@ -1,0 +1,252 @@
+Lowest-common-denominator representation of programs is as JSON structures.
+
+Core concepts:
+
+  Functions
+  - May result in:
+    - Normal value
+    - Error
+      - Caller error (passed in data was invalid)
+      - Internal error
+        - e.g. Bug in function code, resource not found, error while doing I/O
+  - Pure and impure functions.
+  - Either may have side-effects detectable by actions or non-pure
+    functions (but not by pure functions)
+  - Pure functions are guaranteed to always return the same result for
+    the same set of inputs.
+  - Impure functions may return different results at different times.
+  - By default, functions are pure unless they call impure functions,
+    but functions may be marked as pure to force the compiler to consider
+    them as such.
+  
+  Actions (destructive procedures run implicitly by interpreter)
+  - Purpose is to have some side-effect or read some I/O from the world
+  - Take no parameters, but may be constructed by functions that take parameters
+  - May return a result
+  - May trigger an error
+  
+  Data types (a mix of structural, nominative, and duck typing)
+
+## Impure functions
+
+Cause a lot of trouble, even conceptually.  Example:
+
+  loop(
+    someAction >>
+    if( someImpureFunction(), someOtherAction ) >>
+    sleep( 10 seconds )
+  )
+
+Here, if(...) can't be a pure function that returns either someOtherAction or not
+if we are to expect someImpureFunction() to return different results at different
+points in time.  In order to work, we'd have to rewrite this as:
+
+  loop(
+    someAction >>
+    nop >>= _ ->    # This line gives the compiler an opportinity to re-evaluate
+                    # the following expressions on each iteration
+    if( someImpureFunction(), someOtherAction ) >>
+    sleep( 10 seconds )
+  )
+
+Which sucks.  Better to just change the impure function into an action:
+
+  loop(
+    someAction >>
+    actionThatInvokesSomeImpureFunction >>= z ->
+    if( z, someOtherAction ) >>
+    sleep( 10 seconds )
+  )
+
+This way the within-the-loop branching is made explicit by the >>=.
+A compiler *could* do this automatically, but how would it know when that was appropriate?
+How would it know that the programmer didn't really want the impure function to only
+be invoked once, when the action was created?  One possility would be to treat
+all '>>' as impure-function-result-invalidation points, but then the compiler has to
+know about >>.  And then we still have trouble if there are no >>s, such as if we had
+
+  loopEvery10Seconds( if(z, someOtherAction) )
+
+So while it may be useful to have the concept of impure functions for high-level programs
+(e.g. a function that takes a URL for an image and colorizes the image),
+programs that expect different results over time must use actions to make their intent clear.
+
+A function being impure really means that its output *may* change at any time, but
+you can't rely on those changes being picked up /within an invocation of the program/.
+Using impure functions is just a shortcut for when you don't really care.
+
+To the compiler, the implications of an impure function are that:
+- You can't cache the result
+- You should't make any decisions at compile time based on the value
+- If you can do so unobtrusively, you should indicate the impurity of functions
+  to the programmer.  e.g. maybe offer an assertPure(...) operator.
+
+## Nomenclature
+
+  To talk about a struct...
+
+    SomeType<TypeParameter> = class { fieldName: FieldValueType, ... }
+
+## Type system
+
+Equality checks always work on objects of the same nominal type.
+Nominal types may imply that certain fields or methods exist.
+Expression results may be casted to compatible types
+(compatibility being based on whether fields and/or methods exist).
+
+So e.g. if (not actual syntax!)
+
+  person = class {
+    field 'name' : type @ string
+  }
+  staff = person + {
+    field 'staff ID' : type @ integer
+  }
+
+  struct A = { name @ "Derrick", staff ID @ 123 }
+  struct B = { name @ "Derrick", staff ID @ 345 }
+
+Then:
+
+  struct A != struct B
+  staff (struct A) != staff (struct B)
+  person (struct A) == person (struct B)
+  
+  The nominal types of struct A and B are some implicit type (that
+  will not conflict with any programmer-defined nominal types) and
+  based on the fields.
+  
+  staff (struct A) cannot be compared to struct A or struct B, because the nominal types differ.
+
+  person (person (struct A)) is invalid because person objects don't necessarily have the
+  required fields to be staffs.  It may be useful to have a way to cast at runtime.
+
+## Actions
+
+When an action is run, it returns a list of actions to be executed next.
+They will be added to a queue which is processed in FIFO order by the interpreter.
+If any event handlers or timers are registered (I'm not defining how this would work right now)
+those actions may be interspersed with main thread actions.
+
+  ActionResult<T> = { next: List<Action>, result: T }
+
+  Action<T> is an action that returns ActionResult<T>
+
+Thoughts... 
+
+  Actual effects are done by the interpreter context, not by the action.
+  An action may call those to determine ordering, etc.
+
+  abstract class AbstractAction {
+    function andThen( $
+  }
+
+  Let's say struct CA = { first : Action; then : Action }
+
+  Does a >> b >> c mean...
+
+    a.andThen( b.andThen( c ) )
+
+  Or...
+
+    a.andThen(b).andThen(c) ?
+
+  The former seems simpler to implement.
+  Is the result the same?
+    
+    CA<a, [CA<b, [c]>]>    vs.   CA<CA<a,[b]>, [c]>
+
+  The result may be the same, but the structure isn't.
+  I don't think it matters.
+    Actually, according to https://en.wikibooks.org/wiki/Haskell/Understanding_monads:
+      
+      In Haskell, every instance of the Monad type class
+      (and thus all implementations of (>>=) and return)
+      must obey the following three laws:
+
+      m >>= return     =  m                        -- right unit
+      return x >>= f   =  f x                      -- left unit
+ 
+      (m >>= f) >>= g  =  m >>= (\x -> f x >>= g)  -- associativity
+
+    So I guess that settles it.  It does not matter.  Which is good because
+    building a structure for actions grouped like (a (b (c d)))
+    seems conceptually simpler than for (((a b) c) d) using my 'andThen' approach.
+
+  What would (a >> b) >> c do?  It would have to be constructed as
+
+    a.andThen(b).andThen(c)
+
+  Which would give us...
+  
+    ab = CA<a, b>
+    abc = CA<ab, c>
+  
+  step(ab) -> ActionResult { next: [b] }
+  step(abc) -> ActionResult { next: [bc] }  ; Where does BC come from??  That's why this grouping sucks.
+
+  We will have to handle the bc case at some point.  I guess this would happen by abc.step() constructing a new CompoundAction.
+  
+  function CA#step( ca ) {
+    
+
+## Errors
+
+All functions and actions may fail.  How do we represent that and allow handling of failure?
+
+Let's say we have (using Haskell syntax)
+
+  someFunctionThatMayFail :: Integer -> Integer
+
+And we want to call it normally.  We should just be able to say
+
+  someFunctionThatMayFail(350)
+
+and if someFunctionThatMayFail fails, our expression also implicitly fails.
+
+But what if we want to handle the error?  I guess we need another function.
+
+  evaluate(
+    someFunctionThatMayFail(350),
+    onFailure @ failure -> fail( "Failed to someFunctionThatMayFail!", cause @ failure )
+  )
+
+The 'fail(...)' expression is like a 'throw'.
+
+Function failures are more like special return values than exceptions,
+though.  Let's say we do something like...
+
+   a = someFunctionThatMayFail(123);
+   b = someFunctionThatMayFail(456);
+   if( a > 3, a, b )
+
+Then as long as a is valid and > 3, 
+
+
+Then there's action failures...
+
+Normally an Action returns an List<Action>
+What if it fails?
+I guess we could just have another operator to combine an action with a function to call on failure conditions.
+
+  readLine.andThenWithResult(say).onFailure(failure -> say("Failure: " ~ message(failure)) >> fail(failure))
+   
+    structure:
+      ReadLineAction { andThenWithResult: say, onFailure: failure -> say("Failure: " ~ failure) >> fail(failure))
+
+## Stateful functions
+
+For very high-level expressions (which our mid-level expression
+representation format is meant to handle), we may want to reference
+things whose state may change over time, but treat them as unchanging
+for the duration of the program, such as the content of a web page
+named by a URL.
+
+It seems the proper way to handle this would be to either:
+- Cache results of those expressions for the duration of the program, or
+- Rewrite the program so that those values are fetched exactly once, up front.
+
+The caching approach sounds simpler.  So I guess
+
+  If you write a function with an impure implementation, make sure it
+  always returns the same result for the same inputs.

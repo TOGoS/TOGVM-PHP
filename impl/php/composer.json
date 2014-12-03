@@ -1,0 +1,8 @@
+{
+    "name": "togos/togvm",
+    "autoload": {
+	"psr-0": {
+	    "TOGoS_TOGVM_": "lib/"
+	}
+    }
+}

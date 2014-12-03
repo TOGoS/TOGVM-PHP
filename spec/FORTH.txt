@@ -1,0 +1,30 @@
+THIS IS A DUMB IDEA AND NOT WORTH THE EFFORT
+(A Forth dialict might share the tokenizer and some library functions,
+but pretty much everything else would have to be recreated,
+defeating the purpose of Forthing.)
+
+
+
+A Forth-like dialect requires that functions know how many arguments to take off the stack.  I think.
+
+Let's say + is curried.  Then
+
+  1 2 3 + say  ->   1 2 3 (+), and then 'say' outputs the '+' function, which isn't what we wanted.
+
+So yeah, to be treated as forth-words, we need to know how many arguments to apply.
+I guess these forth words should be separate from our functions an actions, though they may use them.
+
+
+
+
+Speaking of, do single-quotes mean anything special here?  I suppose
+they should not.  So we'd need another way to specify currying.  Maybe :x could mean the thing 'x', not the word 'x'
+
+  word 'say' {
+    action @ pop >>= say
+  }
+
+  "Hello" say -> ()
+  >> Hello
+
+  :say  ->  (the 'say' function)

@@ -1,0 +1,57 @@
+Leaving:
+
+  Door open?
+  
+    Yes:
+    
+      Assume n > 0
+      Leave open
+      Exit, ++n
+      Assume n > 1
+    
+    No:
+    
+      Assume n = 0
+      Open door
+      Exit, ++n
+      Assume n = 1
+
+Returning when n = 1
+
+  Actual n may be > 1.
+
+  Door open?
+  
+    Yes?
+    
+      Assume we opened it and that n still = 1
+      Enter, --n
+      Assume n = 0
+      Close door
+    
+    No?
+    
+      Some jerk found the door open but closed it.
+
+Returning when n > 1
+
+  Door open?
+  
+    Yes?
+    
+      Assume n > 1
+      Enter, --n
+      Assume n > 0
+
+    No?
+    
+      The person who originally opened it must have come back and closed it, thinking n = 1.
+      
+      Assume n = 1 (just you)
+      Enter, --n
+      Assume n = 0
+      Close door
+
+Moral:
+- As long as the person who opened the door does not close it, it should remain open.
+- If the person who opened the door closes it, it should remain closed.
