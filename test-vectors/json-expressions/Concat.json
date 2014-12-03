@@ -1,0 +1,26 @@
+{
+    "classUri": "http://ns.nuke24.net/TOGVM/Expressions/ApplyFunction",
+    "functionUri": "http://ns.nuke24.net/TOGVM/Functions/Concatenate",
+    "operands": [
+	{
+	    "classUri": "http://ns.nuke24.net/TOGVM/Expressions/LiteralString",
+	    "literalValue": "Hello"
+	},
+	{
+	    "classUri": "http://ns.nuke24.net/TOGVM/Expressions/LiteralString",
+	    "literalValue": ", "
+	},
+	{
+	    "classUri": "http://ns.nuke24.net/TOGVM/Expressions/LiteralString",
+	    "literalValue": "world"
+	},
+	{
+	    "classUri": "http://ns.nuke24.net/TOGVM/Expressions/LiteralString",
+	    "literalValue": "!"
+	},
+	{
+	    "classUri": "http://ns.nuke24.net/TOGVM/Expressions/LiteralString",
+	    "literalValue": "\n"
+	}
+    ]
+}

@@ -1,9 +1,15 @@
-default: run-demo
+default: run-unit-tests
 
-.PHONY: run-demo
+.PHONY: \
+	clean \
+	default \
+	run-unit-tests
 
-vendor/autoload.php: composer.json
+clean:
+	rm -rf vendor
+
+vendor/autoload.php: composer.lock
 	composer install
 
-run-demo: vendor/autoload.php
-	php bin/demo.php
+run-unit-tests: vendor/autoload.php
+	vendor/bin/phpunit --bootstrap vendor/autoload.php test
