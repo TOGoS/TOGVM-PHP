@@ -36,6 +36,8 @@ Tokens
   Tokenizer directives:
   <?token:qs={single|double|bare}:delimiter=(delimiter)(space or newline)(data bytes)(delimiter)(optional whitespace)?>
   <?token:qs={single|double|bare}:length=(decimal-encoded byte count)(space or newline)(data bytes)(optional whitespace)?>
+  
+  # Line comments are skipped-over by the tokenizer
 
 Syntax
 
