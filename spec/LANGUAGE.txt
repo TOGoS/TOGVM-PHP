@@ -15,6 +15,28 @@ Thoughts...
 
   See VM.txt for VM notes.
 
+Tokens
+
+  Most non-quote, non-brace characters are allowed as bareword parts
+  (so that most URLs valid barewords)
+  
+  Backslash escape sequences:
+  - \\, \', \", \‹, \›, \«, \» (second character represents itself)
+  - \a, \b, \f, \r, \n, \t, \v, \uXXXX, \UXXXXXXXX (standard meanings)
+  
+  Various quotation styles
+  (logical type, nestability, escape sequences)
+  'single, non-nestable, backslash escapes`
+  "double, non-nestable, backslash escapes"
+  ‹single, nestable, backslash escapes›
+  «double, nestable, backslash escapes»
+  「single, nestable, no escape sequences」
+  『double, nestable, no escape sequences』
+  
+  Tokenizer directives:
+  <?token:qs={single|double|bare}:delimiter=(delimiter)(space or newline)(data bytes)(delimiter)(optional whitespace)?>
+  <?token:qs={single|double|bare}:length=(decimal-encoded byte count)(space or newline)(data bytes)(optional whitespace)?>
+
 Syntax
 
     x? means x is optional
