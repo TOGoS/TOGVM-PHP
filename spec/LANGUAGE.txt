@@ -38,6 +38,9 @@ Tokens
   <?token:qs={single|double|bare}:length=(decimal-encoded byte count)(space or newline)(data bytes)(optional whitespace)?>
   
   # Line comments are skipped-over by the tokenizer
+  
+  Newline characters should be treated as tokens, since they have
+  significance in some of the languages I want to support.
 
 Syntax
 

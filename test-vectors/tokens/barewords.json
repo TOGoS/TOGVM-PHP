@@ -1,0 +1,18 @@
+[
+    {
+	"value": "hi",
+	"quoting": "bare"
+    },
+    {
+	"value": "there",
+	"quoting": "bare"
+    },
+    {
+	"value": "hello",
+	"quoting": "bare"
+    },
+    {
+	"value": "\n",
+	"quoting": "bare"
+    }
+]
