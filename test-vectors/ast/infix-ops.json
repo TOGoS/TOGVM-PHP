@@ -1,0 +1,43 @@
+{
+    "type": "operation",
+    "operator": {
+	"type": "symbol",
+	"text": "+"
+    },
+    "operands": [
+	{
+	    "type": "symbol",
+	    "text": "1"
+	},
+	{
+	    "type": "operation",
+	    "operator": {
+		"type": "symbol",
+		"text": "+"
+	    },
+	    "operands": [
+		{
+		    "type": "operation",
+		    "operator": {
+			"type": "symbol",
+			"text": "*"
+		    },
+		    "operands": [
+			{
+			    "type": "symbol",
+			    "text": "2"
+			},
+			{
+			    "type": "symbol",
+			    "text": "3"
+			}
+		    ]
+		},
+		{
+		    "type": "symbol",
+		    "text": "4"
+		}
+	    ]
+	}
+    ]
+}
