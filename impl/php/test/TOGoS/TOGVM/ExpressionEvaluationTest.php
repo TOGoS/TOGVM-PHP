@@ -2,51 +2,6 @@
 
 $TOGoS_TOGVM_expressionDir = __DIR__.'/../../../../../test-vectors/json-expressions';
 
-class TOGoS_TOGVM_CompositeBlob extends Nife_AbstractBlob
-{
-	protected $elements;
-	
-	public function __construct( array $elements ) {
-		$this->elements = $elements;
-	}
-	
-	protected static function describe($thing) {
-		if( gettype($thing) == 'object' ) {
-			return get_class($thing);
-		} else {
-			return gettype($thing);
-		}
-	}
-	
-	protected static function strlen($thing) {
-		if( is_string($thing) ) return strlen($thing);
-		if( $thing instanceof Nife_Blob ) return $thing->getLength();
-		throw new Exception("Don't know how to get length of ".self::describe($thing));
-	}
-	
-	protected static function write($thing, $dest) {
-		if( is_string($thing) ) call_user_func($dest, $thing);
-		if( $thing instanceof Nife_Blob ) $thing->writeTo($dest);
-		throw new Exception("Don't know how to write ".self::describe($thing));
-	}
-	
-	public function __toString() {
-		$str = '';
-		foreach( $this->elements as $e ) $str .= (string)$e;
-		return $str;
-	}
-	
-	public function getLength() {
-		$len = 0;
-		foreach( $this->elements as $e ) $len += self::strlen($e);
-		return $len;
-	}
-	
-	public function writeTo($dest) {
-		foreach( $this->elements as $e ) self::write($e, $dest);
-	}
-}
-
 class TOGoS_TOGVM_ExpressionEvaluationTest extends PHPUnit_Framework_TestCase
 {
 	protected function setUp() {
@@ -55,7 +10,7 @@ class TOGoS_TOGVM_ExpressionEvaluationTest extends PHPUnit_Framework_TestCase
 				'http://ns.nuke24.net/TOGVM/Functions/Concatenate' => function($operands) {
 					// TODO: Concatenate might work on sequences other than strings.
 					// Need to check type of operands.
-					return new TOGoS_TOGVM_CompositeBlob($operands);
+					return new TOGoS_TOGVM_Thneed($operands);
 				}
 			)
 		));

@@ -24,7 +24,7 @@ class TOGoS_TOGVM_TokenizerTest extends PHPUnit_Framework_TestCase
 				$this->_testTokenize($expected, $txt, $tokenFile);
 			}
 		}
-		fclose($dh);
+		closedir($dh);
 	}
 }
 
