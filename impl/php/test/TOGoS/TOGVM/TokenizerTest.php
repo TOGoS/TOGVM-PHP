@@ -3,7 +3,8 @@
 class TOGoS_TOGVM_TokenizerTest extends PHPUnit_Framework_TestCase
 {
 	public function _testTokenize( array $expected, $source, $sourceFilename ) {
-		$tokens = TOGoS_TOGVM_Tokenizer::tokenize($source, $sourceFilename, 1, 1);
+		$sourceLocation = array('filename'=>$sourceFilename, 'lineNumber'=>1, 'columnNumber'=>1);
+		$tokens = TOGoS_TOGVM_Tokenizer::tokenize($source, $sourceLocation);
 		$actual = array();
 		foreach( $tokens as $t ) {
 			$actual[] = array('value'=>$t['value'], 'quoting'=>$t['quoting']);

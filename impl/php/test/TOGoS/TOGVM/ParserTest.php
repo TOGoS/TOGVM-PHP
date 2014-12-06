@@ -3,9 +3,17 @@
 class TOGoS_TOGVM_ParserTest extends PHPUnit_Framework_TestCase
 {
 	public function _testParse( array $expectedAst, $source, $sourceFilename ) {
-		$tokens = TOGoS_TOGVM_Tokenizer::tokenize($source, $sourceFilename, 1, 1);
-		$parserConfig = array('infixOperators'=>TOGoS_TOGVM_Parser::getDefaultInfixOperators());
-		$actualAst = TOGoS_TOGVM_Parser::tokensToAst($tokens, $parserConfig);
+		$beginSourceLocation = array('filename'=>$sourceFilename, 'lineNumber'=>1, 'columnNumber'=>1);
+		$endSourceLocation = $beginSourceLocation;
+		$tokens = TOGoS_TOGVM_Tokenizer::tokenize($source, $endSourceLocation);
+		
+		$parserConfig = array(
+			'infixOperators'=>TOGoS_TOGVM_Parser::getDefaultInfixOperators(),
+			'flushingOperators'=>array("\n"));
+		$actualAst = TOGoS_TOGVM_Parser::tokensToAst($tokens, array_merge($beginSourceLocation,array(
+			'endLineNumber' => $endSourceLocation['lineNumber'],
+			'endColumnNumber' => $endSourceLocation['columnNumber']
+		)), $parserConfig);
 		$this->assertEquals($expectedAst, $actualAst);
 	}
 	

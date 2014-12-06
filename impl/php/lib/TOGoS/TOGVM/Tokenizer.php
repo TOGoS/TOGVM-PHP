@@ -43,10 +43,19 @@ class TOGoS_TOGVM_Tokenizer
 		$this->tokenCallback = $tokenCallback;
 	}
 	
-	public function setSourceLocation( $filename, $lineNumber, $columnNumber ) {
-		$this->filename = $filename;
-		$this->lineNumber = $lineNumber;
-		$this->columnNumber = $columnNumber;
+	public function setSourceLocation( $sourceLocation ) {
+		$this->filename = $sourceLocation['filename'];
+		$this->lineNumber = $sourceLocation['lineNumber'];
+		$this->columnNumber = $sourceLocation['columnNumber'];
+	}
+	
+	/* Returns source location of next character */
+	protected function getSourceLocation() {
+		return array(
+			'filename' => $this->filename,
+			'lineNumber' => $this->lineNumber,
+			'columnNumber' => $this->columnNumber
+		);
 	}
 	
 	public static function isHorizontalWhitespace($c) {
@@ -57,6 +66,7 @@ class TOGoS_TOGVM_Tokenizer
 	}
 	
 	public static function isSelfDelimitingTokenChar($c) {
+		// TODO: I suppose this could be configurable!
 		switch($c) {
 		case "\n":  case "\v": case "\f":
 		case "(": case ")":
@@ -173,11 +183,13 @@ class TOGoS_TOGVM_Tokenizer
 		));
 	}
 	
-	public static function tokenize($string, $filename, $lineNumber, $columnNumber) {
+	public static function tokenize($string, $sourceLocation) {
 		$C = new TOGoS_TOGVM_Thneed();
 		$T = new TOGoS_TOGVM_Tokenizer($C);
+		$T->setSourceLocation($sourceLocation);
 		$T->string($string);
 		$T->flush();
+		$sourceLocation = $T->getSourceLocation();
 		return $C->getElements();
 	}
 }

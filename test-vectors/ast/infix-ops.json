@@ -2,40 +2,40 @@
     "type": "operation",
     "operator": {
 	"type": "symbol",
-	"text": "+"
+	"words": ["+"]
     },
     "operands": [
 	{
 	    "type": "symbol",
-	    "text": "1"
+	    "words": ["1"]
 	},
 	{
 	    "type": "operation",
 	    "operator": {
 		"type": "symbol",
-		"text": "+"
+		"words": ["+"]
 	    },
 	    "operands": [
 		{
 		    "type": "operation",
 		    "operator": {
 			"type": "symbol",
-			"text": "*"
+			"words": ["*"]
 		    },
 		    "operands": [
 			{
 			    "type": "symbol",
-			    "text": "2"
+			    "words": ["2"]
 			},
 			{
 			    "type": "symbol",
-			    "text": "3"
+			    "words": ["3"]
 			}
 		    ]
 		},
 		{
 		    "type": "symbol",
-		    "text": "4"
+		    "words": ["4"]
 		}
 	    ]
 	}

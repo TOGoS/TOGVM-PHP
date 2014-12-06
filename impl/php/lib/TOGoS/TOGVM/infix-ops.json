@@ -1,6 +1,6 @@
 {
 	"**": {
-		"precedence": 20,
+		"precedence": 80,
 		"associativity": "left",
 		"expressionClassName": "Exponentiate",
 		"homogeneousOperands": false,
@@ -8,14 +8,14 @@
 		"operandTypes": ["number","number"]
 	},
 	"*": {
-		"precedence": 40,
+		"precedence": 60,
 		"associativity": "left",
 		"expressionClassName": "Multiply",
 		"homogeneousOperands": true,
 		"operandType": "number"
 	},
 	"/": {
-		"precedence": 40,
+		"precedence": 60,
 		"associativity": "left",
 		"expressionClassName": "Divide",
 		"homogeneousOperands": false,
@@ -23,14 +23,14 @@
 		"operandTypes": ["number","number"]
 	},
 	"+": {
-		"precedence": 60,
+		"precedence": 40,
 		"associativity": "left",
 		"expressionClassName": "Add",
 		"homogeneousOperands": true,
 		"operandType": "number"
 	},
 	"-": {
-		"precedence": 60,
+		"precedence": 40,
 		"associativity": "left",
 		"expressionClassName": "Subtract",
 		"homogeneousOperands": false,
@@ -38,14 +38,14 @@
 		"operandTypes": ["number","number"]
 	},
 	"and": {
-		"precedence": 80,
+		"precedence": 20,
 		"associativity": "left",
 		"expressionClassName": "And",
 		"homogeneousOperands": true,
 		"operandType": "boolean"
 	},
 	"or": {
-		"precedence": 90,
+		"precedence": 20,
 		"associativity": "left",
 		"expressionClassName": "Or",
 		"homogeneousOperands": true,
