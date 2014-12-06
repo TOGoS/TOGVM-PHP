@@ -21,26 +21,28 @@ class TOGoS_TOGVM_Parser
 		$this->astCallback = $astCallback;
 	}
 	
-	protected static function mergeSourceLocation( array &$into, array $append ) {
-		// For now this assumes that $append comes after $into, since
+	protected static function _mergeSourceLocation( array $a, array $b ) {
+		// For now this assumes that $b > $a, since
 		// that's the order in which we receive tokens.
 		// This function could be modified to check column/line numbers and
 		// only expand the range if needed.
-		if( $into === null ) {
-			$into = $append;
-		} else {
-			$into['endLineNumber'] = $append['endLineNumber'];
-			$into['endColumnNumber'] = $append['endColumnNumber'];
-		}
+		if( $a === null ) return $b;
+		$a['endLineNumber']   = $b['endLineNumber'];
+		$a['endColumnNumber'] = $b['endColumnNumber'];
+		return $a;
+	}
+	protected static function mergeSourceLocation( array &$into, array $append ) {
+		$into = self::_mergeSourceLocation($into, $append);
 	}
 	
-	const STATE_BLOCK_OPENED    = 0; // Block opened
-	const STATE_BLOCK           = 1; // Reading content of block
-	const STATE_PHRASE          = 2; // Reading a phrase; additional words may follow
-	const STATE_EXPRESSION_READ = 3; // Left-hand expression's been read; expecting infix operator or close block
-	const STATE_INFIX_READ      = 4; // Infix operator's been read; expecting another expression
-	const STATE_PREFIX_READ     = 5; // Prefix operator's been read
-	const STATE_EOF             = 6; // End of file's been reached
+	const STATE_BLOCK_OPENED    = 0; // Block opened, expecting token
+	const STATE_BLOCK           = 1; // Expecting block content AST
+	const STATE_BLOCK_CLOSING   = 2; // Expecting end bracket
+	const STATE_PHRASE          = 3; // Reading a phrase; additional words may follow
+	const STATE_EXPRESSION_READ = 4; // Left-hand expression's been read; expecting infix operator or close block
+	const STATE_INFIX_READ      = 5; // Infix operator's been read; expecting another expression
+	const STATE_PREFIX_READ     = 6; // Prefix operator's been read
+	const STATE_EOF             = 7; // End of file's been reached
 	
 	protected $state = array(
 		'state' => self::STATE_BLOCK_OPENED,
@@ -55,141 +57,186 @@ class TOGoS_TOGVM_Parser
 		'parent' => null, // Parent state array whose 
 	);
 	
-	const DISP_ATOM                 =  1;
-	const DISP_WORD                 =  2;
-	const DISP_ATOM_ILLEGAL         =  9;
-	const DISP_OPEN_BRACKET         = 11;
-	const DISP_OPEN_BRACKET_ILLEGAL = 19;
-	const DISP_END_BRACKET          = 21;
-	const DISP_END_BRACKET_ILLEGAL  = 29;
-	const DISP_INFIX_TIGHTER        = 31;
-	const DISP_INFIX_LOOSER         = 32;
-	const DISP_INFIX_ILLEGAL        = 39;
-	const DISP_PREFIX               = 41;
-	const DISP_PREFIX_ILLEGAL       = 49;
+	const TT_WORD          = 'wrd';
+	const TT_LITERAL       = 'lit';
+	const TT_OPEN_BRACKET  = 'opn';
+	const TT_CLOSE_BRACKET = 'cls';
+	const TT_OPERATOR      = 'opr';
+	const TT_EOF           = 'eof';
 	
-	protected function tokenDisposition( array $token, &$closeBracket=null ) {
-		switch( $this->state['state'] ) {
-		case self::STATE_BLOCK_OPENED:
-			switch( $token['quoting'] ) {
-			case 'bare':
-				if( isset($this->closeBrackets[$token['value']]) ) {
-					$closeBracket = $this->closeBrackets[$token['value']];
-					return self::DISP_OPEN_BRACKET;
-				} else if( isset($this->prefixOperators[$token['value']]) ) {
-					return self::DISP_PREFIX;
-				} else if( isset($this->infixOperators[$token['value']]) ) {
-					return self::DISP_INFIX_ILLEGAL;
-				} else {
-					return self::DISP_WORD;
-				}
-			case 'single': return self::DISP_WORD;
-			case 'double': return self::DISP_ATOM;
-			default: throw new Exception("Unhandled token quoting: '{$token['quoting']}");
+	protected function parseToken( array $token ) {
+		switch( $token['quoting'] ) {
+		case 'bare':
+			if( isset($this->closeBrackets[$token['value']]) ) {
+				return array(
+					'type' => self::TT_OPEN_BRACKET,
+					'openBracket' => $token['value'],
+					'closeBracket' => $this->closeBrackets[$token['value']],
+					'sourceLocation' => $token['sourceLocation']
+				);			 
+			} else if( isset($this->prefixOperators[$token['value']]) or isset($this->infixOperators[$token['value']]) ) {
+				return array(
+					'type' => self::TT_OPERATOR,
+					'name' => $token['value'],
+					'sourceLocation' => $token['sourceLocation']
+				);
+			} else {
+				return array(
+					'type' => self::TT_WORD,
+					'value' => $token['value'],
+					'sourceLocation' => $token['sourceLocation']
+				);
 			}
-		case self::STATE_PHRASE:
-			switch( $token['quoting'] ) {
-			case 'bare':
-				if( isset($this->bracketPairs[$token['value']]) ) {
-					return self::DISP_OPEN_BRACKET;
-				} else if( isset($this->prefixOperators[$token['value']]) ) {
-					return self::DISP_PREFIX_ILLEGAL;
-				} else if( isset($this->infixOperators[$token['value']]) ) {
-					$infixOperator = $this->infixOperators[$token['value']];
-					return $infixOperator['precedence'] > $this->state['precedence'] ?
-						self::DISP_INFIX_TIGHTER : self::SELF_INFIX_LOOSER;
-				} else {
-					return self::DISP_WORD;
-				}
-			case 'single': return self::DISP_WORD;
-			case 'double': return self::DISP_ATOM_ILLEGAL;
-			default: throw new Exception("Unhandled token quoting: '{$token['quoting']}");
-			}
-		default: throw new Exception("Unhandled parser state: {$this->state['state']}");
+		case 'single':
+			return array(
+				'type' => self::TT_WORD,
+				'value' => $token['value'],
+				'sourceLocation' => $token['sourceLocation']
+			);
+		case 'double':
+			return array(
+				'type' => self::TT_LITERAL,
+				'value' => $token['value'],
+				'sourceLocation' => $token['sourceLocation']
+			);
+		default:
+			throw new Exception("Unrecognized quote style: '{$token['quoting']}'");
 		}
 	}
 	
-	protected function openBlock($closeBracket) {
-		// ...
+	protected function utt( array $ti ) {
+		throw new TOGoS_TOGVM_ParseError("Unexpected token type {$ti['type']} in parse state {$this->state['state']}", array($ti['sourceLocation']));
 	}
-	
-	protected function _closeState( $childAst=null ) {
+
+	/**
+	 * An AST's been parsed and the parent state has to handle it
+	 * @param array $ast the AST
+	 * @param array $ti the token following, if known
+	 */
+	protected function _ast( array $ast, array $ti=null ) {
 		switch( $this->state['state'] ) {
-		case self::STATE_PHRASE:
-			return array(
-				'type' => 'symbol',
-				'words' => $this->state['words']
-			);
-			/*
-		case self::STATE_BLOCK_OPENED:
-			return array(
-							 'type' => 'operation',
-							 '
-			);
 		case self::STATE_BLOCK:
-			return $childAst;
-			*/
-		default: throw new Exception("Don't know how to close state #{$this->state['state']}");
-		}
-	}
-	
-	protected function closeState( $childAst=null ) {
-		$ast = $this->_closeState($childAst);
-		$this->state = $this->state['parent'];
-		return $ast;
-	}
-	
-	protected function closeBlock($closeBracket) {
-		while( $this->state['state'] != self::STATE_BLOCK ) {
-			$ast = $this->closeState();
-		}
-		if( $this->state['closeBracket'] != $closeBracket ) {
-			$gotText = $closeBracket ? "got '$closeBracket'" : 'reached end of file';
-			throw new TOGoS_TOGVM_ParseError("Expected '{$this->state['closeBracket']}' but $gotText");
-		}
-		$ast = array(
-			'type' => 'operation',
-			'operator' => array(
-				'type' => 'symbol',
-				'words' => array($this->state['openBracket'].$this->State['closeBracket'])
-			),
-			'operands' => array($ast)
-		);
-		$this->state = $this->state['parent'];
-		return $ast;
-	}
-	
-	public function token( array $token ) {
-		if( $this->state['sourceLocation'] === null ) {
-			$this->state['sourceLocation'] = $token['sourceLocation'];
-		}
-		
-		$closeBracket = null;
-		$disp = $this->tokenDisposition($token, $closeBracket);
-		
-		switch( $disp ) {
-		case self::DISP_WORD:
-			if( $this->state['state'] == self::STATE_PHRASE ) {
-				$this->state['words'][] = $token['value'];
-				self::mergeSourceLocation($this->state['sourceLocation'], $token['sourceLocation']);
+			if( $ti and $ti['type'] == self::TT_EOF || $ti['type'] == self::TT_CLOSE_BRACKET ) {
+				// Someone found the end of the block!
+				print_r($this->state);
+				print_r($ti);
+				$this->state = array(
+					'state' => self::STATE_BLOCK_CLOSING,
+					'ast' => $ast,
+					'sourceLocation' => self::_mergeSourceLocation($this->state['sourceLocation'], $ti['sourceLocation']),
+					'parent' => $this->state['parent']					
+				);
 			} else {
 				$this->state = array(
-					'state' => self::STATE_PHRASE,
-					'sourceLocation' => $token['sourceLocation'],
-					'words' => array($token['value']),
+					'state' => self::STATE_EXPRESSION_READ,
+					'ast' => $ast,
+					'minPrecedence' => 1,
+					'sourceLocation' => $ast['sourceLocation'],
 					'parent' => $this->state
 				);
 			}
-			return;
+			break;
 		default:
-			throw new Exception("Unhandled token disposition: $disp");
+			throw new Exception("Don't know how to handle ast in state {$this->state['state']}");
 		}
+		
+		if( $ti ) $this->_token($ti);
+	}
+	
+	protected function _token( array $ti ) {
+		echo "_token: state=".$this->state['state'].", ti=".json_encode($ti)."\n";
+		if( $this->state['sourceLocation'] === null ) {
+			$this->state['sourceLocation'] = $ti['sourceLocation'];
+		}
+		switch( $this->state['state'] ) {
+		case self::STATE_BLOCK_OPENED:
+			$this->state = array(
+				'state' => self::STATE_BLOCK,
+				'closeBracket' => $this->state['closeBracket'],
+				'sourceLocation' => $this->state['sourceLocation'],
+				'parent' => $this->state['parent']
+			);
+			switch( $ti['type'] ) {
+			case self::TT_WORD:
+				$this->state = array(
+					'state' => self::STATE_PHRASE,
+					'words' => array($ti['value']),
+					'sourceLocation' => $ti['sourceLocation'],
+					'parent' => $this->state
+				);
+				return;
+			default: $this->utt($ti);
+			}
+		case self::STATE_PHRASE:
+			switch( $ti['type'] ) {
+			case self::TT_WORD:
+				$this->state['words'][] = $ti['value'];
+				self::mergeSourceLocation($this->state['sourceLocation'], $ti['sourceLocation']);
+				return;
+			case self::TT_OPERATOR:
+				$ast = array(
+					'type' => 'phrase',
+					'words' => $this->state['words'],
+					'sourceLocation' => $this->state['sourceLocation']
+				);
+				$this->state = $this->state['parent'];
+				$this->_ast($ast, $ti);
+				return;
+			default: $this->utt($ti);
+			}
+		case self::STATE_EXPRESSION_READ:
+			$ast = $this->state['ast'];
+			
+			switch( $ti['type'] ) {
+			case self::TT_OPERATOR:
+				$precedence = $this->infixOperators[$ti['name']]['precedence'];
+				if( $precedence >= $this->state['minPrecedence'] ) {
+					$this->state = array(
+						'state' => self::STATE_INFIX_READ,
+						'leftAst' => $ast,
+						'operatorName' => $ti['name'],
+						'minPrecedence' => $this->state['minPrecedence']+1,
+						'sourceLocation' => self::_mergeSourceLocation($this->state['sourceLocation'], $ti['sourceLocation']),
+						'parent' => $this->state['parent']
+					);
+					return;
+				}
+				// Otherwise fall through to handle the same as EOF or end bracket
+				// and let a parent state handle it.
+			case self::TT_EOF: case self::TT_CLOSE_BRACKET:
+				$this->state = $this->state['parent'];
+				$this->_ast($ast, $ti);
+				return;
+			default: $this->utt($ti);
+			}
+		case self::STATE_INFIX_READ:
+			switch( $ti['type'] ) {
+			case self::TT_EOF: case self::TT_CLOSE_BRACKET:
+				if( empty($this->infixOperators[$this->state['operatorName']]['ignorable']) ) {
+					throw new TOGoS_TOGVM_ParseError("Expected expression, but got ".self::describeTi($ti), array($ti['sourceLocation']));
+				}
+				$ast = $this->state['leftAst'];
+				$this->state = $this->state['parent'];
+				$this->_ast($ast, $ti);
+				return;
+			default: $this->utt($ti);
+			}
+		default: throw new Exception("Invalid parse state: {$this->state['state']}");
+		}
+	}
+	
+	public function token( array $token ) {
+		$this->_token( $this->parseToken($token) );
 	}
 	
 	/** Indicate that the end of the input file has been reached. */
 	public function eof( array $sourceLocation ) {
-		print_r($this->state);
-		call_user_func($this->astCallback, $this->closeBlock(''));
+		$sourceLocation['endLineNumber'] = $sourceLocation['lineNumber'];
+		$sourceLocation['endColumnNumber'] = $sourceLocation['columnNumber'];
+		$this->_token( array(
+			'type' => self::TT_EOF,
+			'sourceLocation' => $sourceLocation
+		));
 	}
 
 	public static function getDefaultInfixOperators() {

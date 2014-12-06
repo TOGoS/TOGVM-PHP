@@ -183,7 +183,7 @@ class TOGoS_TOGVM_Tokenizer
 		));
 	}
 	
-	public static function tokenize($string, $sourceLocation) {
+	public static function tokenize($string, &$sourceLocation) {
 		$C = new TOGoS_TOGVM_Thneed();
 		$T = new TOGoS_TOGVM_Tokenizer($C);
 		$T->setSourceLocation($sourceLocation);
