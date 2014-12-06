@@ -7,6 +7,11 @@ class TOGoS_TOGVM_Parser
 		'[' => ']',
 		'{' => '}',
 	);
+	protected $openBrackets = array(
+		')' => '(',
+		']' => '[',
+		'}' => '{',
+	);
 	
 	protected $astCallback;
 	protected $infixOperators;
@@ -52,8 +57,7 @@ class TOGoS_TOGVM_Parser
 		//'infixOperator' => null, // Name of infix operator being applied
 		//'prefixOperator' => null, // Name of prefix operator being applied
 		'precedence' => 0, // Any operators on right <= this precedence close the state
-		//'openBracket' => '', // Bracket that opened this state
-		'closeBracket' => '', // Bracket allowed to close a block, e.g. ")"; "" at top-level
+		'openBracket' => '', // Bracket that opened this state
 		'parent' => null, // Parent state array whose 
 	);
 	
@@ -72,6 +76,13 @@ class TOGoS_TOGVM_Parser
 					'type' => self::TT_OPEN_BRACKET,
 					'openBracket' => $token['value'],
 					'closeBracket' => $this->closeBrackets[$token['value']],
+					'sourceLocation' => $token['sourceLocation']
+				);			 
+			} else if( isset($this->openBrackets[$token['value']]) ) {
+				return array(
+					'type' => self::TT_CLOSE_BRACKET,
+					'closeBracket' => $token['value'],
+					'openBracket' => $this->openBrackets[$token['value']],
 					'sourceLocation' => $token['sourceLocation']
 				);			 
 			} else if( isset($this->prefixOperators[$token['value']]) or isset($this->infixOperators[$token['value']]) ) {
@@ -118,11 +129,10 @@ class TOGoS_TOGVM_Parser
 		case self::STATE_BLOCK:
 			if( $ti and $ti['type'] == self::TT_EOF || $ti['type'] == self::TT_CLOSE_BRACKET ) {
 				// Someone found the end of the block!
-				print_r($this->state);
-				print_r($ti);
 				$this->state = array(
 					'state' => self::STATE_BLOCK_CLOSING,
 					'ast' => $ast,
+					'openBracket' => $this->state['openBracket'],
 					'sourceLocation' => self::_mergeSourceLocation($this->state['sourceLocation'], $ti['sourceLocation']),
 					'parent' => $this->state['parent']					
 				);
@@ -144,7 +154,6 @@ class TOGoS_TOGVM_Parser
 	}
 	
 	protected function _token( array $ti ) {
-		echo "_token: state=".$this->state['state'].", ti=".json_encode($ti)."\n";
 		if( $this->state['sourceLocation'] === null ) {
 			$this->state['sourceLocation'] = $ti['sourceLocation'];
 		}
@@ -152,7 +161,7 @@ class TOGoS_TOGVM_Parser
 		case self::STATE_BLOCK_OPENED:
 			$this->state = array(
 				'state' => self::STATE_BLOCK,
-				'closeBracket' => $this->state['closeBracket'],
+				'openBracket' => $this->state['openBracket'],
 				'sourceLocation' => $this->state['sourceLocation'],
 				'parent' => $this->state['parent']
 			);
@@ -167,6 +176,21 @@ class TOGoS_TOGVM_Parser
 				return;
 			default: $this->utt($ti);
 			}
+		case self::STATE_BLOCK_CLOSING:
+			if( $this->state['openBracket'] ) {
+				if( $ti['type'] != self::TT_CLOSE_BRACKET or $ti['openBracket'] != $this->state['openBracket'] ) {
+					throw new TOGoS_TOGVM_ParseError("Expected '{$this->state['closeBracket']}' but found  ".self::describeToken($ti), array($ti['sourceLocation']));
+				}
+			} else {
+				if( $ti['type'] != self::TT_EOF ) {
+					throw new TOGoS_TOGVM_ParseError("Expected end of file but found ".self::describeToken($ti), array($ti['sourceLocation']));
+				}
+				call_user_func( $this->astCallback, $this->state['ast'] );
+				$this->state = array(
+					'state' => self::STATE_EOF
+				);
+			}
+			return;
 		case self::STATE_PHRASE:
 			switch( $ti['type'] ) {
 			case self::TT_WORD:

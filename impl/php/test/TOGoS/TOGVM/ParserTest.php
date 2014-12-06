@@ -3,7 +3,7 @@
 class TOGoS_TOGVM_ParserTest extends PHPUnit_Framework_TestCase
 {
 	public function _testParse( array $expectedAst, $source, $sourceFilename ) {
-		$beginSourceLocation = array('filename'=>$sourceFilename, 'lineNumber'=>1, 'columnNumber'=>1);
+		$beginSourceLocation = array('filename'=>basename($sourceFilename), 'lineNumber'=>1, 'columnNumber'=>1);
 		$endSourceLocation = $beginSourceLocation;
 		$tokens = TOGoS_TOGVM_Tokenizer::tokenize($source, $endSourceLocation);
 		

@@ -79,45 +79,42 @@ class TOGoS_TOGVM_Tokenizer
 		}
 	}
 	
-	protected function sl($l, $c) {
-		return array('filename'=>$this->filename, 'lineNumber'=>$l, 'columnNumber'=>$c);
-	}
-	
-	protected function beginToken( $state, $c, $lineNumber, $columnNumber ) {
+	protected function beginToken( $state, $c ) {
 		$this->state = $state;
-		$this->tokenLocation = $this->sl($lineNumber, $columnNumber);
+		$this->tokenLocation = $this->getSourceLocation();
 		$this->tokenValue = $c;
 
 	}
-	protected function checkSelfDelimitingTokenChar($c, $lineNumber, $columnNumber) {
+	protected function checkSelfDelimitingTokenChar($c) {
 		if( self::isSelfDelimitingTokenChar($c) ) {
 			$this->flush();
 			$this->state = self::STATE_BAREWORD;
-			$this->tokenLocation = $this->sl($lineNumber, $columnNumber);
+			$this->tokenLocation = $this->getSourceLocation();
 			$this->tokenValue = $c;
-			$this->flush();
+			$this->flush(true);
 			return true;
 		}
 		return false;
 	}
+
+	// Valid during char($c) calls
+	protected $nextLineNumber;
+	protected $nextColumnNumber;
 	
-	public function char($c) {
-		$lineNumber = $this->lineNumber;
-		$columnNumber = $this->columnNumber;
-		if( $c == "\n" ) {
-			++$this->lineNumber;
-			$this->columnNumber = 1;
-		} else if( $c == "\t" ) {
-			do {
-				++$this->columnNumber;
-			} while( ($this->columnNumber - 1) % 8 != 0 );
-		} else {
-			++$this->columnNumber;
-		}
-		
+	protected function getCharSourceLocation() {
+		return array(
+			'filename' => $this->filename,
+			'lineNumber' => $this->lineNumber,
+			'columnNumber' => $this->columnNumber,
+			'endLineNumber' => $this->nextLineNumber,
+			'endColumnNumber' => $this->nextColumnNumber
+		);
+	}
+
+	protected function _char($c) {
 		switch( $this->state ) {
 		case self::STATE_WHITESPACE:
-			if( $this->checkSelfDelimitingTokenChar($c, $lineNumber, $columnNumber) ) return;
+			if( $this->checkSelfDelimitingTokenChar($c) ) return;
 			if( self::isHorizontalWhitespace($c) ) return;
 			switch( $c ) {
 			case '"':
@@ -134,11 +131,11 @@ class TOGoS_TOGVM_Tokenizer
 				return;
 			default:
 				// I guess everything else is a valid bareword character?
-				$this->beginToken(self::STATE_BAREWORD, $c, $lineNumber, $columnNumber);
+				$this->beginToken(self::STATE_BAREWORD, $c);
 				return;
 			}
 		case self::STATE_BAREWORD:
-			if( $this->checkSelfDelimitingTokenChar($c, $lineNumber, $columnNumber) ) return;
+			if( $this->checkSelfDelimitingTokenChar($c) ) return;
 			if( self::isHorizontalWhitespace($c) ) {
 				$this->flush();
 				return;
@@ -146,9 +143,9 @@ class TOGoS_TOGVM_Tokenizer
 			
 			switch($c) {
 			case '"': case '"':
-				throw new TOGoS_TOGCM_ParsError("Malplaced quote", $this->sel($lineNumber,$columnNumber));
+				throw new TOGoS_TOGCM_ParseError("Malplaced quote", array($this->getCharSourceLocation()));
 			case '\\':
-				throw new TOGoS_TOGCM_ParsError("Malplaced backslash", $this->sel($lineNumber,$columnNumber));
+				throw new TOGoS_TOGCM_ParseError("Malplaced backslash", array($this->getCharSourceLocation()));
 			}
 			
 			$this->tokenValue .= $c;
@@ -157,6 +154,24 @@ class TOGoS_TOGVM_Tokenizer
 			throw new Exception("AXD");
 		}
 	}
+
+	public function char($c) {
+		if( $c == "\n" ) {
+			$this->nextLineNumber = $this->lineNumber+1;
+			$this->nextColumnNumber = 1;
+		} else {
+			$this->nextLineNumber = $this->lineNumber;
+			$this->nextColumnNumber = $this->columnNumber + 1;
+			if( $c == "\t" ) {
+				while( ($this->nextColumnNumber - 1) % 8 != 0 ) ++$this->nextColumnNumber;
+			}
+		}
+		
+		$this->_char($c);
+		
+		$this->lineNumber = $this->nextLineNumber;
+		$this->columnNumber = $this->nextColumnNumber;
+	}
 	
 	public function string($string) {
 		for( $i=0; $i<strlen($string); ++$i ) {
@@ -164,7 +179,7 @@ class TOGoS_TOGVM_Tokenizer
 		}
 	}
 	
-	public function flush() {
+	public function flush( $breakAfter=false ) {
 		switch( $this->state ) {
 		case self::STATE_WHITESPACE: return;
 		case self::STATE_BAREWORD: $quoting = 'bare'; break;
@@ -172,8 +187,8 @@ class TOGoS_TOGVM_Tokenizer
 		case self::SINGLE_QUOTE: $quoting = 'single'; break;
 		default: return;
 		}
-		$this->tokenLocation['endLineNumber'] = $this->lineNumber;
-		$this->tokenLocation['endColumnNumber'] = $this->columnNumber;
+		$this->tokenLocation['endLineNumber']   = $breakAfter ? $this->nextLineNumber   : $this->lineNumber;
+		$this->tokenLocation['endColumnNumber'] = $breakAfter ? $this->nextColumnNumber : $this->columnNumber;
 		$this->state = self::STATE_WHITESPACE;
 		
 		call_user_func( $this->tokenCallback, array(
