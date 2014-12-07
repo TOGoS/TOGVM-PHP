@@ -8,6 +8,9 @@ default: run-unit-tests
 clean:
 	rm -rf vendor
 
+composer.lock:
+	composer install
+
 vendor/autoload.php: composer.lock
 	composer install
 

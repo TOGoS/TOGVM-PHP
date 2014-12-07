@@ -1,7 +1,7 @@
 {
     "name": "togos/togvm",
     "require": {
-	"php": "~5.4.0",
+	"php": ">=5.4.0",
 	"earthit/php-common": "~0.0.11",
 	"ryprop/nife": "~0.1.0"
     },
@@ -10,7 +10,8 @@
     },
     "autoload": {
 	"psr-0": {
-	    "TOGoS_TOGVM_": "lib/"
+	    "TOGoS_TOGVM_": "lib/",
+	    "TOGoS_TOGES_": "lib/"
 	}
     }
 }

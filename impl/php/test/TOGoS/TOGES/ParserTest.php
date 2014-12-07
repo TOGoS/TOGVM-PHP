@@ -1,6 +1,6 @@
 <?php
 
-class TOGoS_TOGVM_ParserTest extends PHPUnit_Framework_TestCase
+class TOGoS_TOGES_ParserTest extends PHPUnit_Framework_TestCase
 {
 	protected static function stripSourceLocations(array $arr) {
 		$rez = array();
@@ -29,14 +29,14 @@ class TOGoS_TOGVM_ParserTest extends PHPUnit_Framework_TestCase
 		$this->setName("Parse $sourceFilename");
 		$beginSourceLocation = array('filename'=>$sourceFilename, 'lineNumber'=>1, 'columnNumber'=>1);
 		$endSourceLocation = $beginSourceLocation;
-		$tokens = TOGoS_TOGVM_Tokenizer::tokenize($source, $endSourceLocation);
+		$tokens = TOGoS_TOGES_Tokenizer::tokenize($source, $endSourceLocation);
 		
 		$parserConfig = array(
-			'infixOperators'    => TOGoS_TOGVM_Parser::getDefaultInfixOperators(),
-			'prefixOperators'   => TOGoS_TOGVM_Parser::getDefaultPrefixOperators(),
-			'brackets'          => TOGoS_TOGVM_Parser::getDefaultBrackets(),
+			'infixOperators'    => TOGoS_TOGES_Parser::getDefaultInfixOperators(),
+			'prefixOperators'   => TOGoS_TOGES_Parser::getDefaultPrefixOperators(),
+			'brackets'          => TOGoS_TOGES_Parser::getDefaultBrackets(),
 			'flushingOperators' => array("\n"));
-		$actualAst = TOGoS_TOGVM_Parser::tokensToAst($tokens, array_merge($beginSourceLocation,array(
+		$actualAst = TOGoS_TOGES_Parser::tokensToAst($tokens, array_merge($beginSourceLocation,array(
 			'endLineNumber' => $endSourceLocation['lineNumber'],
 			'endColumnNumber' => $endSourceLocation['columnNumber']
 		)), $parserConfig);

@@ -9,7 +9,7 @@
  * }
  */
 
-class TOGoS_TOGVM_Tokenizer
+class TOGoS_TOGES_Tokenizer
 {
 	/*
 	public static function barewordRegex() {
@@ -200,7 +200,7 @@ class TOGoS_TOGVM_Tokenizer
 	
 	public static function tokenize($string, &$sourceLocation) {
 		$C = new TOGoS_TOGVM_Thneed();
-		$T = new TOGoS_TOGVM_Tokenizer($C);
+		$T = new TOGoS_TOGES_Tokenizer($C);
 		$T->setSourceLocation($sourceLocation);
 		$T->string($string);
 		$T->flush();
