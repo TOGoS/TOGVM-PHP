@@ -1,0 +1,34 @@
+{
+	"type": "operation",
+	"operatorName": "+",
+	"operands": [
+		{
+			"type": "operation",
+			"operatorName": "+",
+			"operands": [
+				{
+					"type": "phrase",
+					"words": ["1"]
+				},
+				{
+					"type": "operation",
+					"operatorName": "*",
+					"operands": [
+						{
+							"type": "phrase",
+							"words": ["2"]
+						},
+						{
+							"type": "phrase",
+							"words": ["3"]
+						}
+					]
+				}
+			]
+		},
+		{
+			"type": "phrase",
+			"words": ["4"]
+		}
+	]
+}

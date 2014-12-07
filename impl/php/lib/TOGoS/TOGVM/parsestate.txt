@@ -1,0 +1,23 @@
+(1 + 2 * (3 + 4))
+
+BLOCK_OPENED('')
+
+  (
+
+BLOCK_OPENED('(',BLOCK(''))
+
+  1
+
+PHRASE('1',BLOCK('(',BLOCK('')))
+
+  +
+
+OPERATOR_READ(ast:1,'+',40,BLOCK('(',BLOCK('')))
+
+  2
+
+PHRASE('2',OPERATOR_READ(ast:1,'+',40,BLOCK('(',BLOCK('')))
+
+  *
+
+OPERATOR_READ(ast:2,

@@ -1,6 +1,7 @@
 {
     "name": "togos/togvm",
     "require": {
+	"php": "~5.4.0",
 	"earthit/php-common": "~0.0.11",
 	"ryprop/nife": "~0.1.0"
     },

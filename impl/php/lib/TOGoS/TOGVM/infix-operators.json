@@ -1,13 +1,4 @@
 {
-	"()": {
-		"precedence": 100
-	},
-	"[]": {
-		"precedence": 100
-	},
-	"{}": {
-		"precedence": 100
-	},
 	"**": {
 		"precedence": 80,
 		"associativity": "left",
