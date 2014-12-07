@@ -54,14 +54,13 @@ class TOGoS_TOGVM_ParseState_LValue extends TOGoS_TOGVM_ParseState
 			}
 			return $this->letSomeoneElseHandle($ti);
 		case TOGoS_TOGVM_Parser::TT_OPERATOR:
-			$prec = $this->PC->infixOperatorPrecedence($ti['name']);
-			if( $prec === null ) {
-				// Not a infix operator
-				$this->utt($ti);
-				// TODO: Take operator associativity into account to determine > or >=.
-				// I think is how that would work.
-			} else if( $prec >= $this->minPrecedence ) {
-				return new TOGoS_TOGVM_ParseState_Infix( $this->PC, $this->leftAst, $ti['name'], $prec+1, function($ast) {
+			if( !isset($this->PC->infixOperators[$ti['name']]) ) $this->utt($ti);
+			$op = $this->PC->infixOperators[$ti['name']];
+			if(
+				$op['precedence'] > $this->minPrecedence or
+				$op['precedence'] == $this->minPrecedence && $op['associativity'] == 'right'
+			) {
+				return new TOGoS_TOGVM_ParseState_Infix( $this->PC, $this->leftAst, $ti['name'], $op['precedence'], function($ast) {
 					return new TOGoS_TOGVM_ParseState_LValue($this->PC, $ast, $this->minPrecedence, $this->astCallback);
 				});
 			}
@@ -99,7 +98,7 @@ class TOGoS_TOGVM_ParseState_Infix extends TOGoS_TOGVM_ParseState
 	}
 
 	protected function operatorMayBeIgnored() {
-		return !empty($this->PC->infixOperators[$this->operatorName]['ignorable']);
+		return !empty($this->PC->infixOperators[$this->operatorName]['ignorableAsPostfix']);
 	}
 	
 	public function _token( array $ti ) {
@@ -109,6 +108,24 @@ class TOGoS_TOGVM_ParseState_Infix extends TOGoS_TOGVM_ParseState
 			return $this->_ast($ast);
 		case TOGoS_TOGVM_Parser::TT_WORD:
 			return new TOGoS_TOGVM_ParseState_Word($this->PC, array($ti['value']), $ti['sourceLocation'], array($this,'_ast'));
+		case TOGoS_TOGVM_Parser::TT_OPERATOR:
+			if( isset($this->PC->prefixOperators[$ti['name']]) ) {
+				throw new Exception("Prefix operators not yet supported");
+			}
+			$op = $this->PC->infixOperators[$ti['name']];
+			$myOp = $this->PC->infixOperators[$this->operatorName];
+			if( !empty($myOp['ignorableAsPostfix']) ) {
+				if( $op['precedence'] == $this->minPrecedence ) {
+					// Ignore myOp by replacing it
+					return new TOGoS_TOGVM_ParseState_Infix($this->PC, $this->leftAst, $ti['name'], $op['precedence'], $this->astCallback );
+				} else if( $op['precedence'] < $this->minPrecedence ) {
+					// Ignore myOp by deferring upward
+					return call_user_func( $this->astCallback, $this->leftAst )->_token($ti);
+				} else {
+					// e.g. foo ; + bar, where + isn't a prefix operator
+					$this->utt($ti);
+				}
+			}
 		case TOGoS_TOGVM_Parser::TT_EOF: case TOGoS_TOGVM_Parser::TT_CLOSE_BRACKET:
 			if( $this->operatorMayBeIgnored() ) {
 				return call_user_func( $this->astCallback, $this->leftAst )->_token($ti);
@@ -174,6 +191,15 @@ class TOGoS_TOGVM_ParseState_Initial extends TOGoS_TOGVM_ParseState
 			return $this->_ast($ast);
 		case TOGoS_TOGVM_Parser::TT_WORD:
 			return new TOGoS_TOGVM_ParseState_Word($this->PC, array($ti['value']), $ti['sourceLocation'], array($this,'_ast'));
+		case TOGoS_TOGVM_Parser::TT_OPERATOR:
+			if( isset($this->PC->prefixOperators[$ti['name']]) ) {
+				throw new Exception("Prefix operators not yet supported");
+			}
+			if( isset($this->PC->infixOperators[$ti['name']]) ) {
+				if( $this->PC->infixOperators[$ti['name']]['ignorableAsPrefix'] ) {
+					return $this;
+				}
+			}
 		default: $this->utt($ti);
 		}
 	}
@@ -226,10 +252,6 @@ class TOGoS_TOGVM_ParserConfig
 		foreach( $config['brackets'] as $b ) {
 			$this->bracketsByOpenBracket[$b['openBracket']] = $b;
 		}
-	}
-	
-	public function infixOperatorPrecedence( $opName ) {
-		return isset($this->infixOperators[$opName]) ? $this->infixOperators[$opName]['precedence'] : null;
 	}
 }
 

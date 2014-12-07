@@ -52,17 +52,39 @@
 		"operandType": "boolean"
 	},
 	"@": {
-		"precedence": 15
+		"precedence": 15,
+		"associativity": "right"
+	},
+	">>=": {
+		"precedence": 14,
+		"associativity": "right"
+	},
+	">>": {
+		"precedence": 14,
+		"associativity": "right"
+	},
+	"$": {
+		"precedence": 13,
+		"associativity": "left"
 	},
 	",": {
-		"precedence": 10
+		"precedence": 10,
+		"associativity": "right"
+	},
+	":": {
+		"precedence": 9,
+		"associativity": "right"
 	},
 	";": {
 		"precedence": 5,
-		"ignorable": true	
+		"associativity": "right",
+		"ignorableAsPrefix": true,
+		"ignorableAsPostfix": true
 	},
 	"\n": {
 		"precedence": 5,
-		"ignorable": true	
+		"associativity": "right",
+		"ignorableAsPrefix": true,
+		"ignorableAsPostfix": true
 	}
 }
