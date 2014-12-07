@@ -1,16 +1,17 @@
 {
-	"x(x)": {
+	"()": {
 		"openBracket": "(",
 		"closeBracket": ")",
 		"precedence": 100
 	},
-	"[x]": {
+	"[]": {
 		"openBracket": "[",
-		"closeBracket": "]"
+		"closeBracket": "]",
+		"precedence": 100
 	},
-	"x{x}": {
+	"{}": {
 		"openBracket": "{",
 		"closeBracket": "}",
-		"precedence": 100
+		"precedence": 7
 	}
 }

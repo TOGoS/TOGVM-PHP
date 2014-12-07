@@ -33,8 +33,26 @@ class TOGoS_TOGVM_ParseState_LValue extends TOGoS_TOGVM_ParseState
 		$this->minPrecedence = $minPrecedence;
 	}
 	
+	protected function letSomeoneElseHandle( array $ti ) {
+		return call_user_func($this->astCallback, $this->leftAst)->_token($ti);
+	}
+	
 	public function _token( array $ti ) {
 		switch( $ti['type'] ) {
+		case TOGoS_TOGVM_Parser::TT_OPEN_BRACKET:
+			$bracket = $this->PC->bracketsByOpenBracket[$ti['openBracket']];
+			if( $bracket['precedence'] >= $this->minPrecedence ) {
+				return new TOGoS_TOGVM_ParseState_Initial($this->PC, $bracket, function($ast) use ($bracket) {
+					$ast = array(
+						'type' => 'operation',
+						'operatorName' => $bracket['openBracket'].$bracket['closeBracket'],
+						'operands' => array( $this->leftAst, $ast ),
+						'sourceLocation' => TOGoS_TOGVM_Parser::mergeSourceLocations($this->leftAst['sourceLocation'], $ast['sourceLocation'])
+					);
+					return new TOGoS_TOGVM_ParseState_LValue($this->PC, $ast, $this->minPrecedence, $this->astCallback);
+				});
+			}
+			return $this->letSomeoneElseHandle($ti);
 		case TOGoS_TOGVM_Parser::TT_OPERATOR:
 			$prec = $this->PC->infixOperatorPrecedence($ti['name']);
 			if( $prec === null ) {
@@ -47,9 +65,9 @@ class TOGoS_TOGVM_ParseState_LValue extends TOGoS_TOGVM_ParseState
 					return new TOGoS_TOGVM_ParseState_LValue($this->PC, $ast, $this->minPrecedence, $this->astCallback);
 				});
 			}
-			// Else fall through to let someone else handle it
+			return $this->letSomeoneElseHandle($ti);
 		case TOGoS_TOGVM_Parser::TT_CLOSE_BRACKET: case TOGoS_TOGVM_Parser::TT_EOF:
-			return call_user_func($this->astCallback, $this->leftAst)->_token($ti);
+			return $this->letSomeoneElseHandle($ti);
 		default: $this->utt($ti);
 		}
 	}
@@ -199,11 +217,15 @@ class TOGoS_TOGVM_ParserConfig
 	public $infixOperators;
 	public $prefixOperators;
 	public $brackets;
+	public $bracketsByOpenBracket = array();
 	
 	public function __construct( $config ) {
 		$this->infixOperators = $config['infixOperators'];
 		$this->prefixOperators = $config['prefixOperators'];
 		$this->brackets = $config['brackets'];
+		foreach( $config['brackets'] as $b ) {
+			$this->bracketsByOpenBracket[$b['openBracket']] = $b;
+		}
 	}
 	
 	public function infixOperatorPrecedence( $opName ) {

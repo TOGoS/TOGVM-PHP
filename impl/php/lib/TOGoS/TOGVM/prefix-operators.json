@@ -1,5 +1,11 @@
 {
     "!": {
 	"precedence": 90
+    },
+    "+": {
+	"precedence": 90
+    },
+    "-": {
+	"precedence": 90
     }
 }

@@ -1,0 +1,24 @@
+{
+	"type": "operation",
+	"operatorName": "()",
+	"operands": [
+		{
+			"type": "phrase",
+			"words": ["foo","bar"]
+		},
+		{
+			"type": "operation",
+			"operatorName": ",",
+			"operands": [
+				{
+					"type": "phrase",
+					"words": ["baz"]
+				},
+				{
+					"type": "phrase",
+					"words": ["quux"]
+				}
+			]
+		}
+	]
+}
