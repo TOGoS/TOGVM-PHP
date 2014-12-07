@@ -29,18 +29,18 @@ class TOGoS_TOGES_Tokenizer
 	
 	const STATE_WHITESPACE = 0;
 	const STATE_BAREWORD = 1;
-	const STATE_ESCAPABLE_SYMMETRIC_QUOTE = 2;
-	const STATE_ESCAPABLE_NESTABLE_QUOTE = 3;
-	const STATE_NONESCAPABLE_NESTABLE_QUOTE = 4;
+	const STATE_QUOTE = 2;
 	const STATE_CHAR_ESCAPE_OPENED = 5;
 	const STATE_QUOTE_CLOSED = 6;
 	const STATE_LINE_COMMENT = 7;
 	const STATE_SKIP_WHITESPACE = 8;
 	
+	const BACKSLASH_DISALLOWED = 0;
+	const BACKSLASH_ESCAPES    = 1;
+	const BACKSLASH_LITERAL    = 2;
+	
 	protected $tokenCallback;
-	protected $openQuote;
-	protected $closeQuote;
-	protected $quoting = self::QUOTING_BARE;
+	
 	protected $state = self::STATE_WHITESPACE;
 	protected $parentState; // For states that can return to some other one
 	protected $tokenLocation;
@@ -48,6 +48,12 @@ class TOGoS_TOGES_Tokenizer
 	protected $filename = '(unnamed source)';
 	protected $lineNumber = 1;
 	protected $columnNumber = 1;
+	
+	protected $quoting;
+	protected $openQuote;
+	protected $closeQuote;
+	protected $quoteDepth;
+	protected $backslashBehavior;
 	
 	public function __construct($tokenCallback) {
 		$this->tokenCallback = $tokenCallback;
@@ -94,8 +100,16 @@ class TOGoS_TOGES_Tokenizer
 		$this->tokenLocation = $this->getSourceLocation();
 		$this->quoting = $quoting;
 		$this->tokenValue = $c;
-
 	}
+	
+	protected function beginQuoteToken( $openQuote, $closeQuote, $backslashBehavior, $quoting ) {
+		$this->quoteDepth = 1;
+		$this->openQuote = $openQuote;
+		$this->closeQuote = $closeQuote;
+		$this->backslashBehavior = $backslashBehavior;
+		$this->beginToken( self::STATE_QUOTE, $quoting );
+	}
+
 	protected function checkSelfDelimitingTokenChar($c) {
 		if( self::isSelfDelimitingTokenChar($c) ) {
 			$this->flush();
@@ -133,34 +147,25 @@ class TOGoS_TOGES_Tokenizer
 			if( self::isHorizontalWhitespace($c) ) return;
 			switch( $c ) {
 			case "'":
-				$this->closeQuote = $c;
-				$this->beginToken( self::STATE_ESCAPABLE_SYMMETRIC_QUOTE, self::QUOTING_SINGLE );
+				$this->beginQuoteToken( $c, $c, self::BACKSLASH_ESCAPES, self::QUOTING_SINGLE );
 				return;
 			case '"':
-				$this->closeQuote = $c;
-				$this->beginToken( self::STATE_ESCAPABLE_SYMMETRIC_QUOTE, self::QUOTING_DOUBLE );
+				$this->beginQuoteToken( $c, $c, self::BACKSLASH_ESCAPES, self::QUOTING_DOUBLE );
+				return;
+			case '‘':
+				$this->beginQuoteToken( $c, '’', self::BACKSLASH_ESCAPES, self::QUOTING_SINGLE );
+				return;
+			case '“':
+				$this->beginQuoteToken( $c, '”', self::BACKSLASH_ESCAPES, self::QUOTING_DOUBLE );
 				return;
 			case '‹':
-				$this->openQuote = $c;
-				$this->closeQuote = '›';
-				$this->beginToken( self::STATE_ESCAPABLE_NESTABLE_QUOTE, self::QUOTING_SINGLE );
+				$this->beginQuoteToken( $c, '›', self::BACKSLASH_LITERAL, self::QUOTING_SINGLE );
 				return;
 			case '«':
-				$this->openQuote = $c;
-				$this->closeQuote = '»';
-				$this->beginToken( self::STATE_ESCAPABLE_NESTABLE_QUOTE, self::QUOTING_DOUBLE );
-				return;
-			case '「':
-				$this->openQuote = $c;
-				$this->closeQuote = '」';
-				$this->beginToken( self::STATE_NONESCAPABLE_NESTABLE_QUOTE, self::QUOTING_SINGLE );
-				return;
-			case '『':
-				$this->openQuote = $c;
-				$this->closeQuote = '』';
-				$this->beginToken( self::STATE_NONESCAPABLE_NESTABLE_QUOTE, self::QUOTING_DOUBLE );
+				$this->beginQuoteToken( $c, '»', self::BACKSLASH_LITERAL, self::QUOTING_DOUBLE );
 				return;
 			case '#':
+				$this->parentState = $this->state;
 				$this->state = self::STATE_LINE_COMMENT;
 				return;
 			case '\\':
@@ -180,6 +185,8 @@ class TOGoS_TOGES_Tokenizer
 			
 			switch($c) {
 			case '"': case '"':
+			case '‘': case '’': case '“': case '”':
+			case '‹': case '›': case '«': case '»':
 				throw new TOGoS_TOGCM_ParseError("Malplaced quote", array($this->getCharSourceLocation()));
 			case '\\':
 				throw new TOGoS_TOGCM_ParseError("Malplaced backslash", array($this->getCharSourceLocation()));
@@ -187,11 +194,30 @@ class TOGoS_TOGES_Tokenizer
 			
 			$this->tokenValue .= $c;
 			return;
-		case self::STATE_ESCAPABLE_SYMMETRIC_QUOTE:
-			if( $c == $this->closeQuote ) {
-				$this->flush(self::STATE_QUOTE_CLOSED, true);
+		case self::STATE_QUOTE:
+			if( $c == $this->openQuote and $this->openQuote != $this->closeQuote ) {
+				++$this->quoteDepth;
+				$this->tokenValue .= $c;
+			} else if( $c == $this->closeQuote ) {
+				if( --$this->quoteDepth == 0 ) {
+					$this->flush(self::STATE_QUOTE_CLOSED, true);
+				} else {
+					$this->tokenValue .= $c;
+				}
 			} else if( $c == '\\' ) {
-				$this->state = self::STATE_CHAR_ESCAPE_OPENED;
+				switch( $this->backslashBehavior ) {
+				case self::BACKSLASH_ESCAPES:
+					$this->parentState = $this->state;
+					$this->state = self::STATE_CHAR_ESCAPE_OPENED;
+					break;
+				case self::BACKSLASH_LITERAL:
+					$this->tokenValue .= $c;
+					break;
+				case self::BACKSLASH_DISALLOWED:
+					throw new TOGoS_TOGVM_ParseError("Backslash not allowed", array($this->getSourceLocation()));
+				default:
+					throw new Exception("Invalid backslash mode: {$this->backslashBehavior}");
+				}
 			} else {
 				$this->tokenValue .= $c;
 			}
@@ -215,6 +241,7 @@ class TOGoS_TOGES_Tokenizer
 				throw new TOGoS_TOGVM_ParseError("Illegal escape sequence \"\\{$c}\"", array($this->getSourceLocation()));
 			}
 			$this->tokenValue .= $c;
+			$this->state = $this->parentState;
 			return;
 		case self::STATE_QUOTE_CLOSED:
 			if( self::isHorizontalWhitespace($c) ) {
@@ -282,7 +309,7 @@ class TOGoS_TOGES_Tokenizer
 			throw new TOGoS_TOGVM_ParseError("Illegal UTF-8 sequence byte $ord", array($this->getSourceLocation()));
 		}
 		$this->charBuffer .= $b;
-		if( strlen($this->charBuffer) == $charByteCount ) {
+		if( strlen($this->charBuffer) == $this->charByteCount ) {
 			$this->char($this->charBuffer);
 			$this->charBuffer = '';
 			$this->charByteCount = null;
@@ -301,9 +328,7 @@ class TOGoS_TOGES_Tokenizer
 		
 		switch( $this->state ) {
 		case self::STATE_BAREWORD:
-		case self::STATE_ESCAPABLE_SYMMETRIC_QUOTE:
-		case self::STATE_ESCAPABLE_NESTABLE_QUOTE:
-		case self::STATE_NONESCAPABLE_NESTABLE_QUOTE:
+		case self::STATE_QUOTE:
 			$token = array(
 				'value' => $this->tokenValue,
 				'quoting' => $this->quoting,

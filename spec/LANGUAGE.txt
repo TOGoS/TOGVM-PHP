@@ -28,10 +28,10 @@ Tokens
   (logical type, nestability, escape sequences)
   'single, non-nestable, backslash escapes`
   "double, non-nestable, backslash escapes"
-  ‹single, nestable, backslash escapes›
-  «double, nestable, backslash escapes»
-  「single, nestable, no escape sequences」
-  『double, nestable, no escape sequences』
+  ‘single, nestable, backslash escapes’
+  “double, nestable, backslash escapes”
+  ‹single, nestable, no escape sequences›
+  «double, nestable, no escape sequences»
   
   Tokenizer directives:
   <?token:qs={single|double|bare}:delimiter=(delimiter)(space or newline)(data bytes)(delimiter)(optional whitespace)?>

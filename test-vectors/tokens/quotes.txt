@@ -1,0 +1,8 @@
+'hello \\ \'there\'\n'
+"hello \\ \"there\"\n"
+‘hello \\ ‘there’\n’
+“hello \\ “there”\n”
+‹hello \ ‹there›
+›
+«hello \ «there»
+»
