@@ -13,9 +13,9 @@ abstract class TOGoS_TOGES_ParseState {
 	public abstract function _token( array $ti );
 	
 	protected function utt( array $ti ) {
-		throw new TOGoS_TOGES_ParseError(
+		throw new TOGoS_TOGVM_ParseError(
 			TOGoS_TOGES_Parser::tokenInfoToString($ti)." at ".
-			TOGoS_TOGES_Util::sourceLocationToString($ti['sourceLocation'])." not handled by ".
+			TOGoS_TOGVM_Util::sourceLocationToString($ti['sourceLocation'])." not handled by ".
 			get_class($this),
 			array($ti['sourceLocation'])
 		);

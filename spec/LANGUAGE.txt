@@ -22,7 +22,7 @@ Tokens
   
   Backslash escape sequences:
   - \\, \', \", \‹, \›, \«, \» (second character represents itself)
-  - \a, \b, \f, \r, \n, \t, \v, \uXXXX, \UXXXXXXXX (standard meanings)
+  - \a, \b, \f, \n, \r, \t, \v, \uXXXX, \UXXXXXXXX (standard meanings)
   
   Various quotation styles
   (logical type, nestability, escape sequences)

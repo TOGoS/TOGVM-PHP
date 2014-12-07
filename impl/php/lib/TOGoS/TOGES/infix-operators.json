@@ -51,15 +51,15 @@
 		"homogeneousOperands": true,
 		"operandType": "boolean"
 	},
-	"@": {
+	">>=": {
 		"precedence": 15,
 		"associativity": "right"
 	},
-	">>=": {
-		"precedence": 14,
+	">>": {
+		"precedence": 15,
 		"associativity": "right"
 	},
-	">>": {
+	"@": {
 		"precedence": 14,
 		"associativity": "right"
 	},
