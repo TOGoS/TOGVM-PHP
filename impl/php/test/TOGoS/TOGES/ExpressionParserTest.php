@@ -2,7 +2,7 @@
 
 class TOGoS_TOGES_ExpressionParserTest extends TOGoS_TOGVM_MultiTestCase
 {
-	protected function getTestVectorSubdirectoryName() { return 'json-expressions'; }
+	protected function getTestVectorSubdirectoryName() { return 'expressions'; }
 	protected function getTestVectorExtensions() { return array('txt','json'); }
 	
 	protected function parseAst($source, $sourceFile) {
