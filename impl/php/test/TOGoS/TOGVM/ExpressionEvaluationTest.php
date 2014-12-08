@@ -3,7 +3,7 @@
 class TOGoS_TOGVM_ExpressionEvaluationTest extends TOGoS_TOGVM_MultiTestCase
 {
 	protected function getTestVectorSubdirectoryName() { return 'expressions'; }
-	protected function getTestVectorExtensions() { return array('json','json.expected-value'); }
+	protected function getTestVectorExtensions() { return array('json','expected-value'); }
 	
 	protected function setUp() {
 		$this->interpreter = new TOGoS_TOGVM_Interpreter( array(
