@@ -1,5 +1,5 @@
 {
-    "classUri": "http://ns.nuke24.net/TOGVM/Expressions/ApplyFunction",
+    "classUri": "http://ns.nuke24.net/TOGVM/Expressions/FunctionApplication",
     "functionUri": "http://ns.nuke24.net/TOGVM/Functions/Concatenate",
     "operands": [
 	{

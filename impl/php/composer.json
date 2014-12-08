@@ -13,5 +13,11 @@
 	    "TOGoS_TOGVM_": "lib/",
 	    "TOGoS_TOGES_": "lib/"
 	}
+    },
+    "autoload-dev": {
+	"psr-0": {
+	    "TOGoS_TOGVM_": "test/",
+	    "TOGoS_TOGES_": "test/"
+	}
     }
 }

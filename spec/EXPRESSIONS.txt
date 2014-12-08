@@ -1,5 +1,8 @@
 Lowest-common-denominator representation of programs is as JSON structures.
 
+Expression types:   LiteralString
+  
+
 Core concepts:
 
   Functions

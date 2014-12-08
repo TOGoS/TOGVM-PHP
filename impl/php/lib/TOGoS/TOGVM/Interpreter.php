@@ -12,7 +12,7 @@ class TOGoS_TOGVM_Interpreter
 		switch( $ast['classUri'] ) {
 		case 'http://ns.nuke24.net/TOGVM/Expressions/LiteralString':
 			return (string)$ast['literalValue'];
-		case 'http://ns.nuke24.net/TOGVM/Expressions/ApplyFunction':
+		case 'http://ns.nuke24.net/TOGVM/Expressions/FunctionApplication':
 			if( isset($ast['function']) ) {
 				$function = $this->evaluate($ast['function'], $ctx);
 			} else if( isset($ast['functionUri']) ) {
