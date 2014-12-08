@@ -9,13 +9,20 @@ abstract class TOGoS_TOGVM_MultiTestCase extends PHPUnit_Framework_TestCase
 	/** @return array(input extension, expectation extension) */
 	protected abstract function getTestVectorExtensions();
 	
+	protected function findTestVectorDirectory() {
+		for( $dir = __DIR__, $x=0; is_dir($dir) and $x<20; $dir = dirname($dir), ++$x ) {
+			if( is_dir($tvDir = "$dir/test-vectors") ) return $tvDir;
+		}
+		throw new Exception("Couldn't find 'test-vectors' directory.");
+	}
+
 	protected function getTestVectorFilePairs() {
-		$testVectorDir = __DIR__.'/../../../../../test-vectors/'.$this->getTestVectorSubdirectoryName();
+		$testVectorSubdir = $this->findTestVectorDirectory().'/'.$this->getTestVectorSubdirectoryName();
 		
 		$list = array();
-		$dh = opendir($testVectorDir);
+		$dh = opendir($testVectorSubdir);
 		if( $dh === false ) {
-			throw new Exception("Failed to open $testVectorDir");
+			throw new Exception("Failed to open $testVectorSubdir");
 		}
 		$filesFound = array();
 		while( ($fn = readdir($dh)) !== false ) {
@@ -30,7 +37,7 @@ abstract class TOGoS_TOGVM_MultiTestCase extends PHPUnit_Framework_TestCase
 				$base = $bif[1];
 				$expectedOutputBasename = "$base.$outputExtension";
 				if( isset($filesFound[$expectedOutputBasename]) ) {
-					$pairs[$base] = array("$testVectorDir/$fn", "$testVectorDir/$expectedOutputBasename");
+					$pairs[$base] = array("$testVectorSubdir/$fn", "$testVectorSubdir/$expectedOutputBasename");
 				}
 			}
 		}
