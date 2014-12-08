@@ -30,10 +30,13 @@ abstract class TOGoS_TOGVM_MultiTestCase extends PHPUnit_Framework_TestCase
 				$base = $bif[1];
 				$expectedOutputBasename = "$base.$outputExtension";
 				if( isset($filesFound[$expectedOutputBasename]) ) {
-					$pairs[] = array("$testVectorDir/$fn", "$testVectorDir/$expectedOutputBasename");
+					$pairs[$base] = array("$testVectorDir/$fn", "$testVectorDir/$expectedOutputBasename");
 				}
 			}
 		}
+		
+		ksort($pairs, SORT_STRING);
+		
 		return $pairs;
 	}
 	
