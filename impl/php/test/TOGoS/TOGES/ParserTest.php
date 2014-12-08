@@ -32,9 +32,7 @@ class TOGoS_TOGES_ParserTest extends PHPUnit_Framework_TestCase
 		$tokens = TOGoS_TOGES_Tokenizer::tokenize($source, $endSourceLocation);
 		
 		$parserConfig = array(
-			'infixOperators'    => TOGoS_TOGES_Parser::getDefaultInfixOperators(),
-			'prefixOperators'   => TOGoS_TOGES_Parser::getDefaultPrefixOperators(),
-			'brackets'          => TOGoS_TOGES_Parser::getDefaultBrackets(),
+			'operators'         => TOGoS_TOGES_Parser::getDefaultOperators(),
 			'flushingOperators' => array("\n"));
 		$actualAst = TOGoS_TOGES_Parser::tokensToAst($tokens, array_merge($beginSourceLocation,array(
 			'endLineNumber' => $endSourceLocation['lineNumber'],

@@ -1,0 +1,115 @@
+{
+	"()": {
+		"openBracket": "(",
+		"closeBracket": ")",
+		"bracketPrecedence": 100
+	},
+	"[]": {
+		"openBracket": "[",
+		"closeBracket": "]",
+		"bracketPrecedence": 100
+	},
+	"{}": {
+		"openBracket": "{",
+		"closeBracket": "}",
+		"bracketPrecedence": 7
+	},
+	
+	"!": {
+		"prefixPrecedence": 90,
+		"functionUri": "http://ns.nuke24.net/TOGVM/Functions/Exponentiate"
+	},
+	
+	"**": {
+		"infixPrecedence": 80,
+		"associativity": "left",
+		"functionUri": "http://ns.nuke24.net/TOGVM/Functions/Exponentiate",
+		"homogeneousOperands": false,
+		"operandNames": ["base","exponent"],
+		"operandTypes": ["number","number"]
+	},
+	"*": {
+		"infixPrecedence": 60,
+		"associativity": "left",
+		"functionUri": "http://ns.nuke24.net/TOGVM/Functions/Multiply",
+		"homogeneousOperands": true,
+		"operandType": "number"
+	},
+	"/": {
+		"infixPrecedence": 60,
+		"associativity": "left",
+		"functionUri": "http://ns.nuke24.net/TOGVM/Functions/Divide",
+		"homogeneousOperands": false,
+		"operandNames": ["dividend","divisor"],
+		"operandTypes": ["number","number"]
+	},
+	"+": {
+		"prefixPrecedence": 90,
+		"infixPrecedence": 40,
+		"associativity": "left",
+		"functionUri": "http://ns.nuke24.net/TOGVM/Functions/Add",
+		"homogeneousOperands": true,
+		"operandType": "number"
+	},
+	"-": {
+		"prefixPrecedence": 90,
+		"infixPrecedence": 40,
+		"associativity": "left",
+		"functionUri": "http://ns.nuke24.net/TOGVM/Functions/Subtract",
+		"homogeneousOperands": false,
+		"operandNames": ["minuend","subtrahend"],
+		"operandTypes": ["number","number"]
+	},
+	"and": {
+		"infixPrecedence": 20,
+		"associativity": "left",
+		"functionUri": "http://ns.nuke24.net/TOGVM/Functions/And",
+		"homogeneousOperands": true,
+		"operandType": "boolean"
+	},
+	"or": {
+		"infixPrecedence": 20,
+		"associativity": "left",
+		"functionUri": "http://ns.nuke24.net/TOGVM/Functions/Or",
+		"homogeneousOperands": true,
+		"operandType": "boolean"
+	},
+	">>=": {
+		"infixPrecedence": 15,
+		"functionUri": "http://ns.nuke24.net/TOGVM/Functions/Bind",
+		"associativity": "right"
+	},
+	">>": {
+		"infixPrecedence": 15,
+		"functionUri": "http://ns.nuke24.net/TOGVM/Functions/BindIgnoringResult",
+		"associativity": "right"
+	},
+	"@": {
+		"infixPrecedence": 14,
+		"associativity": "right"
+	},
+	"$": {
+		"infixPrecedence": 13,
+		"associativity": "left"
+	},
+	",": {
+		"infixPrecedence": 10,
+		"associativity": "right"
+	},
+	":": {
+		"infixPrecedence": 9,
+		"associativity": "right"
+	},
+	";": {
+		"infixPrecedence": 5,
+		"associativity": "right",
+		"ignorableAsPrefix": true,
+		"ignorableAsPostfix": true
+	},
+	"\n": {
+		"infixPrecedence": 5,
+		"associativity": "right",
+		"ignorableAsPrefix": true,
+		"ignorableAsPostfix": true
+	}
+}
