@@ -3,9 +3,11 @@
 class TOGoS_TOGES_ExpressionParser
 {
 	protected $operators;
+	protected $wordExpansions;
 	
-	public function __construct(array $operators) {
+	public function __construct(array $operators, $wordExpansions) {
 		$this->operators = $operators;
+		$this->wordExpansions = $wordExpansions;
 	}
 	
 	protected function parseArgumentList(array $ast, $homogeneousOperandOperatorName=null) {
@@ -32,6 +34,12 @@ class TOGoS_TOGES_ExpressionParser
 				'classUri' => 'http://ns.nuke24.net/TOGVM/Expressions/LiteralString',
 				'literalValue' => $ast['value']
 			);
+		case 'phrase':
+			$text = implode(' ',$ast['words']);
+			if( !isset($this->wordExpansions[$text]) ) {
+				throw new TOGoS_TOGVM_CompileError("Undefined symbol: '$text'", array($ast['sourceLocation']));
+			}
+			return $this->wordExpansions[$text];
 		case 'operation':
 			if( !isset($this->operators[$ast['operatorName']]) ) {
 				throw new Exception("Unrecognized operator: '{$ast['operatorName']}'");
