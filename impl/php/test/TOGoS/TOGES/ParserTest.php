@@ -1,30 +1,7 @@
 <?php
 
 class TOGoS_TOGES_ParserTest extends PHPUnit_Framework_TestCase
-{
-	protected static function stripSourceLocations(array $arr) {
-		$rez = array();
-		foreach($arr as $k=>$v) {
-			// Triple-equal because 0 == "sourceLocation".  Oy.
-			if( $k === 'sourceLocation' ) continue;
-			if( is_array($v) ) {
-				$rez[$k] = self::stripSourceLocations($v);
-			} else {
-				$rez[$k] = $v;
-			}
-		}
-		return $rez;
-	}
-	
-	protected static function containsSourceLocations(array $arr) {
-		foreach($arr as $k=>$v) {
-			// Triple-equal because 0 == "sourceLocation".  Oy.
-			if( $k === 'sourceLocation' ) return true;
-			if( is_array($v) && self::containsSourceLocations($v) ) return true;
-		}
-		return false;
-	}
-	
+{	
 	public function _testParse( array $expectedAst, $source, $sourceFilename ) {
 		$this->setName("Parse $sourceFilename");
 		$beginSourceLocation = array('filename'=>$sourceFilename, 'lineNumber'=>1, 'columnNumber'=>1);
@@ -39,16 +16,12 @@ class TOGoS_TOGES_ParserTest extends PHPUnit_Framework_TestCase
 			'endColumnNumber' => $endSourceLocation['columnNumber']
 		)), $parserConfig);
 		
-		if( self::containsSourceLocations($expectedAst) ) {
-			$checkAst = $actualAst;
-		} else {
-			$checkAst = self::stripSourceLocations($actualAst);
-		}
-
-		$this->assertEquals($expectedAst, $checkAst,
+		TOGoS_TOGVM_TestUtil::matchSourceLocateyness($expectedAst, $actualAst);
+		
+		$this->assertEquals($expectedAst, $actualAst,
 			"{$sourceFilename} didn't parse right;\n".
 			"parsed\n\n  ".str_replace("\n","\n  ",$source)."\n".
-			"AST = ".EarthIT_JSON::prettyEncode($checkAst));
+			"AST = ".EarthIT_JSON::prettyEncode($actualAst));
 	}
 	
 	public function testParse() {

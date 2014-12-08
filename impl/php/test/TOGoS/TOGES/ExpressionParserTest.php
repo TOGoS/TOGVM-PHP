@@ -6,7 +6,6 @@ class TOGoS_TOGES_ExpressionParserTest extends TOGoS_TOGVM_MultiTestCase
 	protected function getTestVectorExtensions() { return array('txt','json'); }
 	
 	protected function parseAst($source, $sourceFile) {
-		$this->setName("Parse $sourceFile");
 		$beginSourceLocation = array('filename'=>$sourceFile, 'lineNumber'=>1, 'columnNumber'=>1);
 		$endSourceLocation = $beginSourceLocation;
 		$tokens = TOGoS_TOGES_Tokenizer::tokenize($source, $endSourceLocation);
@@ -21,15 +20,19 @@ class TOGoS_TOGES_ExpressionParserTest extends TOGoS_TOGVM_MultiTestCase
 	}
 
 	protected function parseExpression($source, $sourceFile) {
-		$ast = $this->parseAst($source, $sourceFile);
-		$expressionParser = new TOGoS_TOGES_ExpressionParser(array_merge(
-			TOGoS_TOGES_Parser::getDefaultInfixOperators(),
-			TOGoS_TOGES_Parser::getDefaultPrefixOperators()
-		));
-		//$expression = ::astToExpre
+		$ast = $this->parseAst($source, basename($sourceFile));
+		$expressionParser = new TOGoS_TOGES_ExpressionParser(TOGoS_TOGES_Parser::getDefaultOperators());
+		return $expressionParser->astToExpression($ast);
 	}
 	
 	public function _testFilePair($source, $sourceFile, $expectedExpressionJson, $expectedExpressionJsonFile) {
-		$this->markTestSkipped('Fuh');
+		$expectedExpression = EarthIT_JSON::decode($expectedExpressionJson);
+		$this->setName("astToExpression('".basename($sourceFile)."')");
+		$expression = $this->parseExpression($source, $sourceFile);
+		TOGoS_TOGVM_TestUtil::matchSourceLocateyness($expression, $expectedExpression);
+		if( $expression != $expectedExpression ) {
+			echo "Expression returned by astToExpression = ", EarthIT_JSON::prettyEncode($expression), "\n";
+		}
+		$this->assertEquals($expectedExpression, $expression);
 	}
 }

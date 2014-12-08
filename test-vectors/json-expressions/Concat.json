@@ -1,7 +1,7 @@
 {
     "classUri": "http://ns.nuke24.net/TOGVM/Expressions/FunctionApplication",
     "functionUri": "http://ns.nuke24.net/TOGVM/Functions/Concatenate",
-    "operands": [
+    "arguments": [
 	{
 	    "classUri": "http://ns.nuke24.net/TOGVM/Expressions/LiteralString",
 	    "literalValue": "Hello"

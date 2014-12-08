@@ -24,11 +24,11 @@ class TOGoS_TOGVM_Interpreter
 			} else {
 				throw new Exception("ApplyFunction expression does not define 'function' or 'functionUri'");
 			}
-			$operandValues = array();
-			foreach( $ast['operands'] as $operand ) {
-				$operandValues[] = $this->evaluate($operand, $ctx);
+			$argumentValues = array();
+			foreach( $ast['arguments'] as $argument ) {
+				$argumentValues[] = $this->evaluate($argument, $ctx);
 			}
-			return call_user_func($function, $operandValues);
+			return call_user_func($function, $argumentValues);
 		default:
 			throw new Exception("Unrecognized expression class URI: '{$ast['classUri']}'");
 		}

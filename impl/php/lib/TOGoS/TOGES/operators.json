@@ -60,6 +60,12 @@
 		"operandNames": ["minuend","subtrahend"],
 		"operandTypes": ["number","number"]
 	},
+	"++": {
+		"infixPrecedence": 30,
+		"associativity": "right",
+		"homogeneousOperands": true,
+		"functionUri": "http://ns.nuke24.net/TOGVM/Functions/Concatenate"
+	},
 	"and": {
 		"infixPrecedence": 20,
 		"associativity": "left",
@@ -95,6 +101,11 @@
 	",": {
 		"infixPrecedence": 10,
 		"associativity": "right"
+	},
+	"where": {
+		"infixPrecedence": 9,
+		"associativity": "right",
+		"parseAs": "Where"
 	},
 	":": {
 		"infixPrecedence": 9,
