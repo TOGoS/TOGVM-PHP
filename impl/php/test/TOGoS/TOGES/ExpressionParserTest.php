@@ -1,42 +1,5 @@
 <?php
 
-class TOGoS_TOGES_FakeArray implements ArrayAccess
-{
-	public function offsetExists($k) { return false; }
-	public function offsetGet($k) { throw new Exception(); }
-	public function offsetSet($k,$v) { throw new Exception(); }
-	public function offsetUnset($k) { throw new Exception(); }
-}
-
-class TOGoS_TOGES_VariableSymbolTable extends TOGoS_TOGES_FakeArray
-{
-	public function offsetExists($k) {
-		return true;
-	}
-	public function offsetGet($k) {
-		return ['classUri'=>'http://ns.nuke24.net/TOGVM/Expressions/Variable', 'variableName'=>$k];
-	}
-}
-
-class TOGoS_TOGES_OverrideSymbolTable extends TOGoS_TOGES_FakeArray
-{
-	protected $parent;
-	protected $overrides;
-	
-	public function __construct($parent, $overrides) {
-		$this->parent = $parent;
-		$this->overrides = $overrides;
-	}
-	
-	public function offsetExists($k) {
-		return isset($this->overrides[$k]) or isset($this->parent[$k]);
-	}
-
-	public function offsetGet($k) {
-		return isset($this->overrides[$k]) ? $this->overrides[$k] : $this->parent[$k];
-	}
-}
-
 class TOGoS_TOGES_ExpressionParserTest extends TOGoS_TOGVM_MultiTestCase
 {
 	protected function getTestVectorSubdirectoryName() { return 'expressions'; }
