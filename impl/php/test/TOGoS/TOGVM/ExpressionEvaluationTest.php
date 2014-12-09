@@ -19,6 +19,9 @@ class TOGoS_TOGVM_ExpressionEvaluationTest extends TOGoS_TOGVM_MultiTestCase
 						$rez += $v;
 					}
 					return $rez;
+				},
+				'http://ns.nuke24.net/TOGVM/Functions/Subtract' => function($arguments) {
+					return $arguments[0] - $arguments[1];
 				}
 			)
 		));

@@ -34,7 +34,11 @@ class TOGoS_TOGES_ParseState_LValue extends TOGoS_TOGES_ParseState
 	}
 	
 	protected function letSomeoneElseHandle( array $ti ) {
-		return call_user_func($this->astCallback, $this->leftAst)->_token($ti);
+		$rez = call_user_func($this->astCallback, $this->leftAst, $ti);
+		if( !is_object($rez) ) {
+			throw new Exception("AST callback returned non-ParseState: ".var_export($rez,true)."; ".var_export($this->astCallback,true));
+		}
+		return $rez->_token($ti);
 	}
 	
 	public function _token( array $ti ) {
@@ -96,7 +100,8 @@ class TOGoS_TOGES_ParseState_Infix extends TOGoS_TOGES_ParseState
 			return call_user_func($this->astCallback, $ast);
 		});
 	}
-
+	
+	// TODO: This shares a lot in common with Initial#_token; should probably make them share somehow
 	public function _token( array $ti ) {
 		switch( $ti['type'] ) {
 		case TOGoS_TOGES_Parser::TT_LITERAL:
@@ -104,6 +109,22 @@ class TOGoS_TOGES_ParseState_Infix extends TOGoS_TOGES_ParseState
 			return $this->_ast($ast);
 		case TOGoS_TOGES_Parser::TT_WORD:
 			return new TOGoS_TOGES_ParseState_Word($this->PC, array($ti['value']), $ti['sourceLocation'], array($this,'_ast'));
+		case TOGoS_TOGES_Parser::TT_OPEN_BRACKET:
+			$openBracketTi = $ti;
+			$bracket = $this->PC->bracketsByOpenBracket[$openBracketTi['openBracket']];
+			return new TOGoS_TOGES_ParseState_Initial($this->PC, $bracket, function($ast,$closeBracketTi) use ($bracket,$openBracketTi) {
+				$ast = array(
+					'type' => 'operation',
+					'operatorName' => $bracket['openBracket'].$bracket['closeBracket'],
+					'operands' => array( $ast ),
+					'sourceLocation' => TOGoS_TOGES_Parser::mergeSourceLocations(
+						$openBracketTi['sourceLocation'],
+						$ast['sourceLocation'],
+						$closeBracketTi['sourceLocation']
+					)
+				);
+				return new TOGoS_TOGES_ParseState_LValue($this->PC, $ast, 0, array($this,'_ast'));
+			});
 		case TOGoS_TOGES_Parser::TT_OPERATOR:
 			$op = $this->PC->operators[$ti['name']];
 			$myOp = $this->PC->operators[$this->operatorName];
@@ -113,7 +134,7 @@ class TOGoS_TOGES_ParseState_Infix extends TOGoS_TOGES_ParseState
 					return new TOGoS_TOGES_ParseState_Infix($this->PC, $this->leftAst, $ti['name'], $op['infixPrecedence'], $this->astCallback );
 				} else if( $op['infixPrecedence'] < $this->minPrecedence ) {
 					// Ignore myOp by deferring upward
-					return call_user_func( $this->astCallback, $this->leftAst )->_token($ti);
+					return call_user_func( $this->astCallback, $this->leftAst, $ti )->_token($ti);
 				} else {
 					// e.g. foo ; + bar, where + isn't a prefix operator
 					$this->utt($ti);
@@ -122,7 +143,7 @@ class TOGoS_TOGES_ParseState_Infix extends TOGoS_TOGES_ParseState
 			$this->utt($ti);
 		case TOGoS_TOGES_Parser::TT_EOF: case TOGoS_TOGES_Parser::TT_CLOSE_BRACKET:
 			if( !empty($this->PC->operators[$this->operatorName]['ignorableAsPostfix']) ) {
-				return call_user_func( $this->astCallback, $this->leftAst )->_token($ti);
+				return call_user_func( $this->astCallback, $this->leftAst, $ti )->_token($ti);
 			}
 			$this->utt($ti);
 		default: $this->utt($ti);
@@ -130,6 +151,8 @@ class TOGoS_TOGES_ParseState_Infix extends TOGoS_TOGES_ParseState
 	}
 }
 
+// TODO: Somewhere along the line we need to include the source locations
+// of the brackets themselves into the resulting AST's sourcelocation
 class TOGoS_TOGES_ParseState_BlockRead extends TOGoS_TOGES_ParseState
 {
 	protected $ast;
@@ -154,7 +177,7 @@ class TOGoS_TOGES_ParseState_BlockRead extends TOGoS_TOGES_ParseState
 	
 	public function _token( array $ti ) {
 		if( $this->closeBracketMatches($ti) ) {
-			return call_user_func($this->astCallback, $this->ast);
+			return call_user_func($this->astCallback, $this->ast, $ti);
 		} else {
 			$this->utt($ti);
 		}
@@ -165,6 +188,9 @@ class TOGoS_TOGES_ParseState_Initial extends TOGoS_TOGES_ParseState
 {
 	protected $bracketPair;
 	
+	/**
+	 * @param $astCallback callback to be called with the AST of the block
+	 */
 	public function __construct( TOGoS_TOGES_ParserConfig $PC, $bracketPair, callable $astCallback ) {
 		parent::__construct($PC, $astCallback);
 		$this->bracketPair = $bracketPair;
@@ -185,6 +211,22 @@ class TOGoS_TOGES_ParseState_Initial extends TOGoS_TOGES_ParseState
 			return $this->_ast($ast);
 		case TOGoS_TOGES_Parser::TT_WORD:
 			return new TOGoS_TOGES_ParseState_Word($this->PC, array($ti['value']), $ti['sourceLocation'], array($this,'_ast'));
+		case TOGoS_TOGES_Parser::TT_OPEN_BRACKET:
+			$openBracketTi = $ti;
+			$bracket = $this->PC->bracketsByOpenBracket[$openBracketTi['openBracket']];
+			return new TOGoS_TOGES_ParseState_Initial($this->PC, $bracket, function($ast,$closeBracketTi) use ($bracket,$openBracketTi) {
+				$ast = array(
+					'type' => 'operation',
+					'operatorName' => $bracket['openBracket'].$bracket['closeBracket'],
+					'operands' => array( $ast ),
+					'sourceLocation' => TOGoS_TOGES_Parser::mergeSourceLocations(
+						$openBracketTi['sourceLocation'],
+						$ast['sourceLocation'],
+						$closeBracketTi['sourceLocation']
+					)
+				);
+				return new TOGoS_TOGES_ParseState_LValue($this->PC, $ast, 0, array($this,'_ast'));
+			});
 		case TOGoS_TOGES_Parser::TT_OPERATOR:
 			if( isset($this->PC->operators[$ti['name']]) ) {
 				if( $this->PC->operators[$ti['name']]['ignorableAsPrefix'] ) {
@@ -227,8 +269,31 @@ class TOGoS_TOGES_ParseState_Word extends TOGoS_TOGES_ParseState
 				'words' => $this->words,
 				'sourceLocation' => $this->sourceLocation
 			);
-			return call_user_func($this->astCallback, $ast)->_token($ti);
+			return call_user_func($this->astCallback, $ast, $ti)->_token($ti);
 		}
+	}
+}
+
+class TOGoS_TOGES_ParseState_EOF extends TOGoS_TOGES_ParseState
+{
+	// I had a dream about skiing last night.
+	// I think it was last night.
+	// I remember stepping into a pond or something.
+	// But I was wearing my wool sweater so the top of me stayed dry.
+	// I had some other dream later.
+	
+	protected $eofSourceLocation;
+	
+	public function __construct(TOGoS_TOGES_ParserConfig $PC, array $eofSourceLocation) {
+		parent::__construct($PC, function($ast) { throw new Exception("WTF"); });
+		$this->eofSourceLocation = $eofSourceLocation;
+	}
+	
+	public function _token( array $ti ) {
+		throw new Exception(
+			"Somehow got another token after EOF: ".TOGoS_TOGES_Parser::tokenInfoToString($ti)." at ".
+			TOGoS_TOGVM_Util::sourceLocationToString($ti['sourceLocation'])."; EOF was at ".
+			TOGoS_TOGVM_Util::sourceLocationToString($this->eofSourceLocation));
 	}
 }
 
@@ -247,14 +312,28 @@ class TOGoS_TOGES_ParserConfig
 
 class TOGoS_TOGES_Parser
 {
+	protected $PC;
 	protected $operators = array();
 	protected $bracketsByOpenBracket = array();
 	protected $bracketsByCloseBracket = array();
+	protected $astCallback;
 	
 	public function __construct( array $config, callable $astCallback ) {
-		$PC = new TOGoS_TOGES_ParserConfig($config);
+		$this->PC = new TOGoS_TOGES_ParserConfig($config);
 		$this->operators = $config['operators'];
-		$this->state = new TOGoS_TOGES_ParseState_Initial($PC, array('openBracket'=>'', 'closeBracket'=>''), $astCallback );
+		$this->astCallback = $astCallback;
+		// For now, assuming 1 file = 1 expression
+		$fileBrackets = array('openBracket'=>'', 'closeBracket'=>'');
+		$this->state = new TOGoS_TOGES_ParseState_Initial(
+			$this->PC, $fileBrackets,
+			function($ast, $eofTi) use ($fileBrackets) {
+				if( $eofTi['type'] != self::TT_EOF ) {
+					throw new Exception("Got something other than EOF as following token in outermost AST callback.");
+				}
+				call_user_func($this->astCallback, $ast);
+				return new TOGoS_TOGES_ParseState_EOF($this->PC, $eofTi['sourceLocation']);
+			}
+		);
 		foreach( $config['operators'] as $b ) if(isset($b['openBracket'])) {
 			$this->bracketsByOpenBracket[$b['openBracket']] = $b;
 			$this->bracketsByCloseBracket[$b['closeBracket']] = $b;
@@ -327,23 +406,40 @@ class TOGoS_TOGES_Parser
 		}
 	}
 	
-	public static function mergeSourceLocations( array $a, array $b ) {
-		// For now this assumes that $b > $a, since
-		// that's the order in which we receive tokens.
-		// This function could be modified to check column/line numbers and
-		// only expand the range if needed.
-		if( $a === null ) return $b;
-		$a['endLineNumber']   = $b['endLineNumber'];
-		$a['endColumnNumber'] = $b['endColumnNumber'];
-		return $a;
+	public static function mergeSourceLocations() {
+		$merged = null;
+		foreach( func_get_args() as $sl ) {
+			if( $merged === null ) $merged = $sl;
+			else {
+				if( $sl['lineNumber'] < $merged['lineNumber'] or
+				    $sl['lineNumber'] == $merged['lineNumber'] && $sl['columnNumber'] < $merged['columnNumber'] ) {
+					$merged['lineNumber'] = $sl['lineNumber'];
+					$merged['columnNumber'] = $sl['columnNumber'];
+				}
+				if( $sl['endLineNumber'] > $merged['endLineNumber'] or
+					 $sl['endLineNumber'] == $merged['endLineNumber'] && $sl['endColumnNumber'] > $merged['endColumnNumber'] ) {
+					$merged['lineNumber'] = $sl['lineNumber'];
+					$merged['columnNumber'] = $sl['columnNumber'];
+				}
+			}
+		}
+		return $merged;
 	}
+	
 	/** In-place version, no 's' */
 	protected static function mergeSourceLocation( array &$into, array $append ) {
 		$into = self::mergeSourceLocations($into, $append);
 	}
 		
 	protected function _token( array $ti ) {
-		$this->state = $this->state->_token($ti);
+		$newState = $this->state->_token($ti);
+		if( !($newState instanceof TOGoS_TOGES_ParseState) ) {
+			throw new Exception(
+				get_class($this->state)." returned something other than ".
+				"a ParseState in response to token ".self::tokenInfoToString($ti)
+			);
+		}
+		$this->state = $newState;
 	}
 	
 	public function token( array $token ) {

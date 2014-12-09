@@ -2,19 +2,23 @@
 
 class TOGoS_TOGES_OverrideSymbolTable extends TOGoS_TOGVM_FakeArray
 {
-	protected $parent;
-	protected $overrides;
+	protected $tables;
 	
-	public function __construct($parent, $overrides) {
-		$this->parent = $parent;
-		$this->overrides = $overrides;
+	public function __construct() {
+		$this->tables = func_get_args();
 	}
 	
 	public function offsetExists($k) {
-		return isset($this->overrides[$k]) or isset($this->parent[$k]);
+		foreach( $this->tables as $t ) {
+			if( isset($t[$k]) ) return true;
+		}
+		return false;
 	}
 
 	public function offsetGet($k) {
-		return isset($this->overrides[$k]) ? $this->overrides[$k] : $this->parent[$k];
+		foreach( $this->tables as $t ) {
+			if( isset($t[$k]) ) return $t[$k];
+		}
+		return null;
 	}
 }

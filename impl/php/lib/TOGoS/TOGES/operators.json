@@ -2,7 +2,9 @@
 	"()": {
 		"openBracket": "(",
 		"closeBracket": ")",
-		"bracketPrecedence": 100
+		"bracketPrecedence": 100,
+		"circumfixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/Identity",
+		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/ApplyFunction"
 	},
 	"[]": {
 		"openBracket": "[",
@@ -17,13 +19,13 @@
 	
 	"!": {
 		"prefixPrecedence": 90,
-		"functionUri": "http://ns.nuke24.net/TOGVM/Functions/Exponentiate"
+		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/Exponentiate"
 	},
 	
 	"**": {
 		"infixPrecedence": 80,
 		"associativity": "left",
-		"functionUri": "http://ns.nuke24.net/TOGVM/Functions/Exponentiate",
+		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/Exponentiate",
 		"homogeneousOperands": false,
 		"operandNames": ["base","exponent"],
 		"operandTypes": ["number","number"]
@@ -31,14 +33,14 @@
 	"*": {
 		"infixPrecedence": 60,
 		"associativity": "left",
-		"functionUri": "http://ns.nuke24.net/TOGVM/Functions/Multiply",
+		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/Multiply",
 		"homogeneousOperands": true,
 		"operandType": "number"
 	},
 	"/": {
 		"infixPrecedence": 60,
 		"associativity": "left",
-		"functionUri": "http://ns.nuke24.net/TOGVM/Functions/Divide",
+		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/Divide",
 		"homogeneousOperands": false,
 		"operandNames": ["dividend","divisor"],
 		"operandTypes": ["number","number"]
@@ -47,7 +49,7 @@
 		"prefixPrecedence": 90,
 		"infixPrecedence": 40,
 		"associativity": "left",
-		"functionUri": "http://ns.nuke24.net/TOGVM/Functions/Add",
+		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/Add",
 		"homogeneousOperands": true,
 		"operandType": "number"
 	},
@@ -55,7 +57,7 @@
 		"prefixPrecedence": 90,
 		"infixPrecedence": 40,
 		"associativity": "left",
-		"functionUri": "http://ns.nuke24.net/TOGVM/Functions/Subtract",
+		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/Subtract",
 		"homogeneousOperands": false,
 		"operandNames": ["minuend","subtrahend"],
 		"operandTypes": ["number","number"]
@@ -64,30 +66,30 @@
 		"infixPrecedence": 30,
 		"associativity": "right",
 		"homogeneousOperands": true,
-		"functionUri": "http://ns.nuke24.net/TOGVM/Functions/Concatenate"
+		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/Concatenate"
 	},
 	"and": {
 		"infixPrecedence": 20,
 		"associativity": "left",
-		"functionUri": "http://ns.nuke24.net/TOGVM/Functions/And",
+		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/And",
 		"homogeneousOperands": true,
 		"operandType": "boolean"
 	},
 	"or": {
 		"infixPrecedence": 20,
 		"associativity": "left",
-		"functionUri": "http://ns.nuke24.net/TOGVM/Functions/Or",
+		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/Or",
 		"homogeneousOperands": true,
 		"operandType": "boolean"
 	},
 	">>=": {
 		"infixPrecedence": 15,
-		"functionUri": "http://ns.nuke24.net/TOGVM/Functions/Bind",
+		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/Bind",
 		"associativity": "right"
 	},
 	">>": {
 		"infixPrecedence": 15,
-		"functionUri": "http://ns.nuke24.net/TOGVM/Functions/BindIgnoringResult",
+		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/BindIgnoringResult",
 		"associativity": "right"
 	},
 	"@": {

@@ -45,25 +45,40 @@ class TOGoS_TOGES_ExpressionParser
 				throw new Exception("Unrecognized operator: '{$ast['operatorName']}'");
 			}
 			$operator = $this->operators[$ast['operatorName']];
-			if( isset($operator['functionUri']) ) {
-				$arguments = array();
-				$arguments[] = $this->astToExpression($ast['operands'][0]);
-				if( count($ast['operands']) == 2 ) {
-					$argumentList = $this->parseArgumentList(
-						$ast['operands'][1],
-						!empty($operator['homogeneousOperands']) ? $ast['operatorName'] : null);
-					foreach( $argumentList as $k=>$arg ) {
-						if( is_string($k) ) $arguments[$k] = $arg;
-						else $arguments[] = $arg;
-					}
-				}
-				return array(
-					'classUri' => 'http://ns.nuke24.net/TOGVM/Expressions/FunctionApplication',
-					'functionUri' => $operator['functionUri'],
-					'arguments' => $arguments
-				);
+			$functionUri = null;
+			if( count($ast['operands']) == 1 and isset($operator['circumfixFunctionUri']) ) {
+				// Look for 1-ary function (circumfix or prefix)
+				$functionUri = $operator['circumfixFunctionUri'];
+			} else if( count($ast['operands']) == 1 and isset($operator['prefixFunctionUri']) ) {
+				// Look for 1-ary function (circumfix or prefix)
+				$functionUri = $operator['prefixFunctionUri'];
+			} else if( count($ast['operands']) == 2 and isset($operator['infixFunctionUri']) ) {
+				$functionUri = $operator['infixFunctionUri'];
+			} else {
+				throw new Exception("Don't know how to convert ".count($ast['operands'])."-ary ".$ast['operatorName']." AST node to expression");
 			}
-			throw new Exception("Don't know how to asdmaklm");
+			
+			$arguments = array();
+			$arguments[] = $this->astToExpression($ast['operands'][0]);
+			
+			if( count($ast['operands'] == 1) and $functionUri == 'http://ns.nuke24.net/TOGVM/Functions/Identity' ) {
+				return $arguments[0];
+			}
+			
+			if( count($ast['operands']) == 2 ) {
+				$argumentList = $this->parseArgumentList(
+					$ast['operands'][1],
+					!empty($operator['homogeneousOperands']) ? $ast['operatorName'] : null);
+				foreach( $argumentList as $k=>$arg ) {
+					if( is_string($k) ) $arguments[$k] = $arg;
+					else $arguments[] = $arg;
+				}
+			}
+			return array(
+				'classUri' => 'http://ns.nuke24.net/TOGVM/Expressions/FunctionApplication',
+				'functionUri' => $functionUri,
+				'arguments' => $arguments
+			);
 		default:
 			throw new Exception("Don't yet know how to compile AST nodes of type '{$ast['type']}'");
 		}
