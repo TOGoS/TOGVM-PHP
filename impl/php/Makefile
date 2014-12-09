@@ -6,7 +6,7 @@ default: run-unit-tests
 	run-unit-tests
 
 clean:
-	rm -rf vendor
+	rm -rf vendor composer.lock
 
 composer.lock:
 	composer install
