@@ -68,4 +68,20 @@ class TOGoS_TOGES_ExpressionParser
 			throw new Exception("Don't yet know how to compile AST nodes of type '{$ast['type']}'");
 		}
 	}
+	
+	public function sourceToExpression($source, array $sourceLocation) {
+		$endSourceLocation = $sourceLocation;
+		$tokens = TOGoS_TOGES_Tokenizer::tokenize($source, $endSourceLocation);
+		
+		$parserConfig = [
+			'operators'         => $this->operators,
+			'flushingOperators' => ["\n"]
+		];
+		$ast = TOGoS_TOGES_Parser::tokensToAst($tokens, array_merge($sourceLocation, [
+			'endLineNumber' => $endSourceLocation['lineNumber'],
+			'endColumnNumber' => $endSourceLocation['columnNumber']
+		]), $parserConfig);
+		
+		return $this->astToExpression($ast);
+	}
 }
