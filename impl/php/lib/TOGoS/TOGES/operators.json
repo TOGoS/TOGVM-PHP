@@ -25,23 +25,23 @@
 	"**": {
 		"infixPrecedence": 80,
 		"associativity": "left",
-		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/Exponentiate",
 		"homogeneousOperands": false,
+		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/Exponentiate",
 		"operandNames": ["base","exponent"],
 		"operandTypes": ["number","number"]
 	},
 	"*": {
 		"infixPrecedence": 60,
 		"associativity": "left",
-		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/Multiply",
 		"homogeneousOperands": true,
+		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/Multiply",
 		"operandType": "number"
 	},
 	"/": {
 		"infixPrecedence": 60,
 		"associativity": "left",
-		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/Divide",
 		"homogeneousOperands": false,
+		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/Divide",
 		"operandNames": ["dividend","divisor"],
 		"operandTypes": ["number","number"]
 	},
@@ -49,16 +49,16 @@
 		"prefixPrecedence": 90,
 		"infixPrecedence": 40,
 		"associativity": "left",
-		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/Add",
 		"homogeneousOperands": true,
+		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/Add",
 		"operandType": "number"
 	},
 	"-": {
 		"prefixPrecedence": 90,
 		"infixPrecedence": 40,
 		"associativity": "left",
-		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/Subtract",
 		"homogeneousOperands": false,
+		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/Subtract",
 		"operandNames": ["minuend","subtrahend"],
 		"operandTypes": ["number","number"]
 	},
@@ -68,18 +68,54 @@
 		"homogeneousOperands": true,
 		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/Concatenate"
 	},
+	">=": {
+		"infixPrecedence": 22,
+		"associativity": "right",
+		"homogeneousOperands": false,
+		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/IsGreaterThanOrEqualTo"
+	},
+	"<=": {
+		"infixPrecedence": 22,
+		"associativity": "right",
+		"homogeneousOperands": false,
+		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/IsLesserThanOrEqualTo"
+	},
+	">": {
+		"infixPrecedence": 22,
+		"associativity": "right",
+		"homogeneousOperands": false,
+		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/IsGreaterThan"
+	},
+	"<": {
+		"infixPrecedence": 22,
+		"associativity": "right",
+		"homogeneousOperands": false,
+		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/IsLesserThan"
+	},
+	"!=": {
+		"infixPrecedence": 21,
+		"associativity": "right",
+		"homogeneousOperands": false,
+		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/AreNotEqual"
+	},
+	"=": {
+		"infixPrecedence": 21,
+		"associativity": "right",
+		"homogeneousOperands": false,
+		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/AreEqual"
+	},
 	"and": {
 		"infixPrecedence": 20,
 		"associativity": "left",
-		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/And",
 		"homogeneousOperands": true,
+		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/And",
 		"operandType": "boolean"
 	},
 	"or": {
 		"infixPrecedence": 20,
 		"associativity": "left",
-		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/Or",
 		"homogeneousOperands": true,
+		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/Or",
 		"operandType": "boolean"
 	},
 	">>=": {
