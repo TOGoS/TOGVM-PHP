@@ -1,0 +1,30 @@
+{
+    "type": "operation",
+    "operatorName": "and",
+    "operands": [
+	{
+	    "type": "phrase",
+	    "words": ["room.floordamp"]
+	},
+	{
+	    "type": "operation",
+	    "operatorName": "()",
+	    "operands": [
+		{
+		    "type": "operation",
+		    "operatorName": "=",
+		    "operands": [
+			{
+			    "type": "phrase",
+			    "words": ["room.roomexfan"]
+			},
+			{
+			    "type": "literal",
+			    "value": "not present"
+			}
+		    ]
+		}
+	    ]
+	}
+    ]
+}

@@ -33,10 +33,16 @@ class TOGoS_TOGVM_ExpressionEvaluationTest extends TOGoS_TOGVM_MultiTestCase
 		return call_user_func($compiled, array('variableResolver' => array('some variable'=>56)));
 	}
 	
+	protected function stringify($v) {
+		if( $v === false ) return "false";
+		if( $v === null ) return "null";
+		return (string)$v;
+	}
+	
 	public function _testFilePair($expressionJson, $expressionJsonFilename, $expectedValue, $expectedValueFilename) {
 		$expressionAst = EarthIT_JSON::decode($expressionJson);
-		$actualValue = (string)$this->evalExpressionAst($expressionAst);
+		$actualValue = self::stringify($this->evalExpressionAst($expressionAst));
 		preg_match('#/([^/]+)\.json$#',$expressionJsonFilename,$bif);
-		$this->assertEquals($expectedValue, $actualValue, "Value of '{$bif[1]}' did not match expected.");
+		$this->assertEquals(rtrim($expectedValue), rtrim($actualValue), "Value of '{$bif[1]}' did not match expected.");
 	}
 }

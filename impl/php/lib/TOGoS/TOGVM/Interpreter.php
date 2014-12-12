@@ -13,7 +13,12 @@ class TOGoS_TOGVM_Interpreter
 		case 'http://ns.nuke24.net/TOGVM/Expressions/LiteralString':
 			return (string)$ast['literalValue'];
 		case 'http://ns.nuke24.net/TOGVM/Expressions/LiteralInteger':
-			return (string)$ast['literalValue'];
+			return (int)$ast['literalValue'];
+		case 'http://ns.nuke24.net/TOGVM/Expressions/LiteralNumber':
+			return (float)$ast['literalValue'];
+		case 'http://ns.nuke24.net/TOGVM/Expressions/LiteralBoolean':
+			if( $ast['literalValue'] === 'true' ) return true;
+			return (bool)$ast['literalValue'];
 		case 'http://ns.nuke24.net/TOGVM/Expressions/Variable':
 			return $ctx['variableResolver'][$ast['variableName']];
 		case 'http://ns.nuke24.net/TOGVM/Expressions/FunctionApplication':
