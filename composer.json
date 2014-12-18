@@ -1,12 +1,27 @@
 {
     "name": "togos/togvm",
+    "repositories": [
+	{
+	    "type": "package",
+	    "package": {
+		"name": "togos/togvm-spec",
+		"version": "dev-master",
+		"source": {
+		    "url": "https://github.com/TOGoS/TOGVM-Spec.git",
+		    "type": "git",
+		    "reference": "origin/master"
+		}
+	    }
+	}
+    ],
     "require": {
 	"php": "~5.4",
 	"earthit/php-common": "~0.0.11",
 	"ryprop/nife": "~0.1"
     },
     "require-dev": {
-	"phpunit/phpunit": "~3.7"
+	"phpunit/phpunit": "~3.7",
+	"togos/togvm-spec": "dev-master"
     },
     "autoload": {
 	"psr-0": {

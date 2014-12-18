@@ -5,8 +5,15 @@ default: run-unit-tests
 	default \
 	run-unit-tests
 
-run-unit-tests:
-	${MAKE} -C impl/php run-unit-tests
-
 clean:
-	${MAKE} -C impl/php clean
+	rm -rf vendor composer.lock
+
+composer.lock: | composer.json
+	composer update
+
+vendor: composer.lock
+	composer install
+	touch "$@"
+
+run-unit-tests: vendor
+	vendor/bin/phpunit --bootstrap vendor/autoload.php test
