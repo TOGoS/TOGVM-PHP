@@ -19,7 +19,7 @@
 	
 	"!": {
 		"prefixPrecedence": 90,
-		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/Exponentiate"
+		"infixFunctionUri": "http://ns.nuke24.net/TOGVM/Functions/Negate"
 	},
 	
 	"**": {
