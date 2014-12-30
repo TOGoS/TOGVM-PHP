@@ -354,7 +354,9 @@ class TOGoS_TOGES_Tokenizer
 		$T->setSourceLocation($sourceLocation);
 		$T->string($string);
 		$T->flush();
-		$sourceLocation = $T->getSourceLocation();
+		$endSourceLocation = $T->getSourceLocation();
+		$sourceLocation['endLineNumber'] = $endSourceLocation['lineNumber'];
+		$sourceLocation['endColumnNumber'] = $endSourceLocation['columnNumber'];
 		return $C->getElements();
 	}
 }

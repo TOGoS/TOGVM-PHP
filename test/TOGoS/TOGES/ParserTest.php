@@ -7,17 +7,13 @@ class TOGoS_TOGES_ParserTest extends TOGoS_TOGVM_MultiTestCase
 
 	public function _testParse( array $expectedAst, $source, $sourceFile ) {
 		$this->setName("Parse $sourceFile");
-		$beginSourceLocation = array('filename'=>$sourceFile, 'lineNumber'=>1, 'columnNumber'=>1);
-		$endSourceLocation = $beginSourceLocation;
-		$tokens = TOGoS_TOGES_Tokenizer::tokenize($source, $endSourceLocation);
+		$sourceLocation = array('filename'=>$sourceFile, 'lineNumber'=>1, 'columnNumber'=>1);
+		$tokens = TOGoS_TOGES_Tokenizer::tokenize($source, $sourceLocation);
 		
 		$parserConfig = array(
 			'operators'         => TOGoS_TOGES_Parser::getDefaultOperators(),
 			'flushingOperators' => array("\n"));
-		$actualAst = TOGoS_TOGES_Parser::tokensToAst($tokens, array_merge($beginSourceLocation,array(
-			'endLineNumber' => $endSourceLocation['lineNumber'],
-			'endColumnNumber' => $endSourceLocation['columnNumber']
-		)), $parserConfig);
+		$actualAst = TOGoS_TOGES_Parser::tokensToAst($tokens, $sourceLocation, $parserConfig);
 		
 		TOGoS_TOGVM_TestUtil::matchSourceLocateyness($expectedAst, $actualAst);
 		

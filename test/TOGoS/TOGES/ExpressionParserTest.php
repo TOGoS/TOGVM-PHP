@@ -6,18 +6,14 @@ class TOGoS_TOGES_ExpressionParserTest extends TOGoS_TOGVM_MultiTestCase
 	protected function getTestVectorExtensions() { return ['txt','json']; }
 	
 	protected function parseAst($source, $sourceFile) {
-		$beginSourceLocation = ['filename'=>$sourceFile, 'lineNumber'=>1, 'columnNumber'=>1];
-		$endSourceLocation = $beginSourceLocation;
-		$tokens = TOGoS_TOGES_Tokenizer::tokenize($source, $endSourceLocation);
+		$sourceLocation = ['filename'=>$sourceFile, 'lineNumber'=>1, 'columnNumber'=>1];
+		$tokens = TOGoS_TOGES_Tokenizer::tokenize($source, $sourceLocation);
 		
 		$parserConfig = [
 			'operators'         => TOGoS_TOGES_Parser::getDefaultOperators(),
 			'flushingOperators' => ["\n"]
 		];
-		return TOGoS_TOGES_Parser::tokensToAst($tokens, array_merge($beginSourceLocation,[
-			'endLineNumber' => $endSourceLocation['lineNumber'],
-			'endColumnNumber' => $endSourceLocation['columnNumber']
-		]), $parserConfig);
+		return TOGoS_TOGES_Parser::tokensToAst($tokens, $sourceLocation, $parserConfig);
 	}
 
 	protected function parseExpression($source, $sourceFile) {
