@@ -85,17 +85,13 @@ class TOGoS_TOGES_ExpressionParser
 	}
 	
 	public function sourceToExpression($source, array $sourceLocation) {
-		$endSourceLocation = $sourceLocation;
-		$tokens = TOGoS_TOGES_Tokenizer::tokenize($source, $endSourceLocation);
+		$tokens = TOGoS_TOGES_Tokenizer::tokenize($source, $sourceLocation);
 		
 		$parserConfig = [
 			'operators'         => $this->operators,
 			'flushingOperators' => ["\n"]
 		];
-		$ast = TOGoS_TOGES_Parser::tokensToAst($tokens, array_merge($sourceLocation, [
-			'endLineNumber' => $endSourceLocation['lineNumber'],
-			'endColumnNumber' => $endSourceLocation['columnNumber']
-		]), $parserConfig);
+		$ast = TOGoS_TOGES_Parser::tokensToAst($tokens, $sourceLocation, $parserConfig);
 		
 		return $this->astToExpression($ast);
 	}
