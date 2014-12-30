@@ -13,6 +13,12 @@ class TOGoS_TOGES_TokenizerTest extends TOGoS_TOGVM_MultiTestCase
 			$actual[] = array('value'=>$t['value'], 'quoting'=>$t['quoting']);
 		}
 		$this->assertEquals($expected, $actual);
+
+		$newlineCount = substr_count($source,"\n");
+		$expectedEndLine = 1 + $newlineCount;
+		$expectedEndColumn = 1 + strlen($source) - ($newlineCount ? strrpos($source, "\n")+1 : 0);
+		$this->assertEquals($expectedEndLine  , $sourceLocation['endLineNumber']);
+		$this->assertEquals($expectedEndColumn, $sourceLocation['endColumnNumber']);
 	}
 
 	public function _testFilePair($source, $sourceFile, $expectedTokenJson, $expectedAstJsonFile) {
