@@ -11,18 +11,6 @@
 
 class TOGoS_TOGES_Tokenizer
 {
-	/*
-	public static function barewordRegex() {
-		return '[A-Za-z0-9_\-\+!@#$%^&*]+';
-	}
-	public static function flatQuoteRegex($quoteChar) {
-		return $quoteChar."((?:[^$quoteChar]|\\[\\'\"abfrntv]|\\u[A-Fa-f0-9]{4})*)".$quoteChar;
-	}
-	public static function tokenize($str) {
-		preg_match(
-	}
-	*/
-	
 	const QUOTING_BARE   = 'bare';
 	const QUOTING_SINGLE = 'single';
 	const QUOTING_DOUBLE = 'double';
