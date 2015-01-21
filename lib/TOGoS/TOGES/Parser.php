@@ -12,6 +12,9 @@ abstract class TOGoS_TOGES_ParseState {
 	/** Returns the new parse state */
 	public abstract function _token( array $ti );
 	
+	/**
+	 * Throw an unhandled token exception
+	 */
 	protected function utt( array $ti ) {
 		throw new TOGoS_TOGVM_ParseError(
 			TOGoS_TOGES_Parser::tokenInfoToString($ti)." at ".
@@ -128,7 +131,32 @@ class TOGoS_TOGES_ParseState_Infix extends TOGoS_TOGES_ParseState
 		case TOGoS_TOGES_Parser::TT_OPERATOR:
 			$op = $this->PC->operators[$ti['name']];
 			$myOp = $this->PC->operators[$this->operatorName];
+			
+			// Figure out if we can ignore one
+			// $keep = 'mine'|'new'|'both';
 			if( !empty($myOp['ignorableAsPostfix']) ) {
+				if( !empty($op['ignorableAsPrefix']) ) {
+					// If they're the same operator, ignore the new one because it's easier.
+					if( $ti['name'] == $this->operatorName ) {
+						$keep = 'mine';
+					} else if( $myOp['infixPrecedence'] == $op['infixPrecedence'] ) {
+						throw new TOGoS_TOGVM_ParseError(
+							"Uh oh; found ambiguously ignorable operators '{$this->operatorName}' and '{$ti['name']}' together!",
+							[$ti['sourceLocation']]);
+					}
+					// Go with the one with lower precedence!
+					$keep = $myOp['infixPrecedence'] < $op['infixPrecedence'] ? 'mine' : 'new';
+				} else {
+					$keep = 'new';
+				}
+			} else if( !empty($op['ignorableAsPrefix']) ) {
+				$keep = 'mine';
+			} else {
+				$keep = 'both';
+			}
+
+			
+			if( $keep == 'new' ) {
 				if( $op['infixPrecedence'] == $this->minPrecedence ) {
 					// Ignore myOp by replacing it
 					return new TOGoS_TOGES_ParseState_Infix($this->PC, $this->leftAst, $ti['name'], $op['infixPrecedence'], $this->astCallback );
@@ -139,8 +167,14 @@ class TOGoS_TOGES_ParseState_Infix extends TOGoS_TOGES_ParseState
 					// e.g. foo ; + bar, where + isn't a prefix operator
 					$this->utt($ti);
 				}
+			} else if( $keep == 'mine' ) {
+				return $this;
+			} else {
+				// We can't keep both!
+				// Unless one or other is a post/prefix operator...
+				// But that's for another day.
+				$this->utt($ti);
 			}
-			$this->utt($ti);
 		case TOGoS_TOGES_Parser::TT_EOF: case TOGoS_TOGES_Parser::TT_CLOSE_BRACKET:
 			if( !empty($this->PC->operators[$this->operatorName]['ignorableAsPostfix']) ) {
 				return call_user_func( $this->astCallback, $this->leftAst, $ti )->_token($ti);

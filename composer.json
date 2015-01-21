@@ -9,7 +9,7 @@
 		"source": {
 		    "url": "https://github.com/TOGoS/TOGVM-Spec.git",
 		    "type": "git",
-		    "reference": "origin/master"
+		    "reference": "ff68a30ae6508f691c0af973fb85518bddf0736c"
 		}
 	    }
 	}

@@ -156,7 +156,7 @@
 		"ignorableAsPostfix": true
 	},
 	"\n": {
-		"infixPrecedence": 5,
+		"infixPrecedence": 4,
 		"associativity": "right",
 		"ignorableAsPrefix": true,
 		"ignorableAsPostfix": true
