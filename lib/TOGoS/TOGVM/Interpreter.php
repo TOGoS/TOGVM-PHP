@@ -34,8 +34,8 @@ class TOGoS_TOGVM_Interpreter
 				throw new Exception("ApplyFunction expression does not define 'function' or 'functionUri'");
 			}
 			$argumentValues = array();
-			foreach( $ast['arguments'] as $argument ) {
-				$argumentValues[] = $this->evaluate($argument, $ctx);
+			foreach( $ast['arguments'] as $k=>$argument ) {
+				$argumentValues[$k] = $this->evaluate($argument, $ctx);
 			}
 			return call_user_func($function, $argumentValues);
 		default:
