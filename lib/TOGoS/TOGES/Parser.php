@@ -236,10 +236,27 @@ class TOGoS_TOGES_ParseState_Initial extends TOGoS_TOGES_ParseState
 		});
 	}
 	
+	protected function closeBracketMatches( array $ti ) {
+		$expectedCloseBracket = $this->bracketPair['closeBracket'];
+		if( $expectedCloseBracket == '' ) {
+			if( $ti['type'] != TOGoS_TOGES_Parser::TT_EOF ) return false;
+		} else {
+			if( $ti['type'] != TOGoS_TOGES_Parser::TT_CLOSE_BRACKET ) return false;
+			if( $ti['closeBracket'] != $expectedCloseBracket ) return false;
+		}
+		return true;
+	}
+	
 	public function _token( array $ti ) {
 		// This might end up being almost exactly the same as for Infix.
 		// Maybe they can share _token implementation somehow.
 		switch( $ti['type'] ) {
+		case TOGoS_TOGES_Parser::TT_CLOSE_BRACKET:
+			if( $this->closeBracketMatches($ti) ) {
+				return $this->_ast(array('type'=>'void'))->_token($ti);
+			} else {
+				$this->utt($ti);
+			}
 		case TOGoS_TOGES_Parser::TT_LITERAL:
 			$ast = array('type'=>'literal', 'value'=>$ti['value'], 'sourceLocation'=>$ti['sourceLocation']);
 			return $this->_ast($ast);
