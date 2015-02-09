@@ -32,14 +32,17 @@ class TOGoS_TOGES_ExpressionParser
 			}
 			return array(
 				'classUri' => 'http://ns.nuke24.net/TOGVM/Expressions/LiteralString',
-				'literalValue' => $ast['value']
+				'literalValue' => $ast['value'],
+				'sourceLocation' => $ast['sourceLocation'],
 			);
 		case 'phrase':
 			$text = implode(' ',$ast['words']);
 			if( !isset($this->wordExpansions[$text]) ) {
 				throw new TOGoS_TOGVM_CompileError("Undefined symbol: '$text'", array($ast['sourceLocation']));
 			}
-			return $this->wordExpansions[$text];
+			$expr = $this->wordExpansions[$text];
+			$expr['sourceLocation'] = $ast['sourceLocation'];
+			return $expr;
 		case 'operation':
 			if( !isset($this->operators[$ast['operatorName']]) ) {
 				throw new Exception("Unrecognized operator: '{$ast['operatorName']}'");
@@ -77,7 +80,8 @@ class TOGoS_TOGES_ExpressionParser
 			return array(
 				'classUri' => 'http://ns.nuke24.net/TOGVM/Expressions/FunctionApplication',
 				'functionUri' => $functionUri,
-				'arguments' => $arguments
+				'arguments' => $arguments,
+				'sourceLocation' => $ast['sourceLocation'],
 			);
 		default:
 			throw new Exception("Don't yet know how to compile AST nodes of type '{$ast['type']}'");
