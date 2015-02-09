@@ -17,8 +17,13 @@ class TOGoS_TOGVM_Interpreter
 		case 'http://ns.nuke24.net/TOGVM/Expressions/LiteralNumber':
 			return (float)$ast['literalValue'];
 		case 'http://ns.nuke24.net/TOGVM/Expressions/LiteralBoolean':
-			if( $ast['literalValue'] === 'true' ) return true;
-			return (bool)$ast['literalValue'];
+			$v = $ast['literalValue'];
+			if( is_bool($v) ) return $v;
+			if( $v === 'true' ) return true;
+			if( $v === 'false' ) return false;
+			if( $v === 0 or $v === '0' ) return false;
+			if( $v === 1 or $v === '1' ) return true;
+			throw new Exception("Unrecognized representation of literal boolean: {$v}");
 		case 'http://ns.nuke24.net/TOGVM/Expressions/Variable':
 			return $ctx['variableResolver'][$ast['variableName']];
 		case 'http://ns.nuke24.net/TOGVM/Expressions/FunctionApplication':
