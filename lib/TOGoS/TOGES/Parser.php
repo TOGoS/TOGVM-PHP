@@ -253,7 +253,7 @@ class TOGoS_TOGES_ParseState_Initial extends TOGoS_TOGES_ParseState
 		switch( $ti['type'] ) {
 		case TOGoS_TOGES_Parser::TT_CLOSE_BRACKET:
 			if( $this->closeBracketMatches($ti) ) {
-				return $this->_ast(array('type'=>'void'))->_token($ti);
+				return $this->_ast(array('type'=>'void', 'sourceLocation'=>$ti['sourceLocation']))->_token($ti);
 			} else {
 				$this->utt($ti);
 			}
