@@ -234,6 +234,7 @@ class TOGoS_TOGES_Tokenizer
 		case self::STATE_LINE_COMMENT:
 			if( $c == "\n" ) {
 				$this->state = $this->parentState;
+				$this->_char($c);
 			}
 			return;
 		case self::STATE_QUOTE_CLOSED:
