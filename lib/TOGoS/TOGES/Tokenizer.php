@@ -231,6 +231,11 @@ class TOGoS_TOGES_Tokenizer
 			$this->tokenValue .= $c;
 			$this->state = $this->parentState;
 			return;
+		case self::STATE_LINE_COMMENT:
+			if( $c == "\n" ) {
+				$this->state = $this->parentState;
+			}
+			return;
 		case self::STATE_QUOTE_CLOSED:
 			if( self::isHorizontalWhitespace($c) ) {
 				$this->state = self::STATE_WHITESPACE;
