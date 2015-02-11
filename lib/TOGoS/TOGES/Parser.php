@@ -469,8 +469,8 @@ class TOGoS_TOGES_Parser
 				}
 				if( $sl['endLineNumber'] > $merged['endLineNumber'] or
 					 $sl['endLineNumber'] == $merged['endLineNumber'] && $sl['endColumnNumber'] > $merged['endColumnNumber'] ) {
-					$merged['lineNumber'] = $sl['lineNumber'];
-					$merged['columnNumber'] = $sl['columnNumber'];
+					$merged['endLineNumber'] = $sl['endLineNumber'];
+					$merged['endColumnNumber'] = $sl['endColumnNumber'];
 				}
 			}
 		}
