@@ -12,7 +12,7 @@ class TOGoS_TOGES_TokenizerTest extends TOGoS_TOGVM_MultiTestCase
 		foreach( $tokens as $t ) {
 			$actual[] = array('value'=>$t['value'], 'quoting'=>$t['quoting']);
 		}
-		$this->assertEquals($expected, $actual);
+		$this->assertEquals($expected, $actual, $sourceFilename);
 
 		$newlineCount = substr_count($source,"\n");
 		$expectedEndLine = 1 + $newlineCount;
