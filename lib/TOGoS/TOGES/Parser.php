@@ -507,10 +507,6 @@ class TOGoS_TOGES_Parser
 		));
 	}
 	
-	public static function getDefaultOperators() {
-		return EarthIT_JSON::decode(file_get_contents(__DIR__.'/operators.json'));
-	}
-	
 	public static function tokensToAst( array $tokens, array $sourceLocation, array $config ) {
 		$C = new TOGoS_TOGVM_Thneed();
 		$parser = new TOGoS_TOGES_Parser($config, $C);

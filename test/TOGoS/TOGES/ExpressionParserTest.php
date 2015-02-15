@@ -10,7 +10,7 @@ class TOGoS_TOGES_ExpressionParserTest extends TOGoS_TOGVM_MultiTestCase
 		$tokens = TOGoS_TOGES_Tokenizer::tokenize($source, $sourceLocation);
 		
 		$parserConfig = [
-			'operators'         => TOGoS_TOGES_Parser::getDefaultOperators(),
+			'operators'         => $this->getTestOperators(),
 			'flushingOperators' => ["\n"]
 		];
 		return TOGoS_TOGES_Parser::tokensToAst($tokens, $sourceLocation, $parserConfig);
@@ -26,7 +26,7 @@ class TOGoS_TOGES_ExpressionParserTest extends TOGoS_TOGVM_MultiTestCase
 		);
 		
 		$expressionParser = new TOGoS_TOGES_ExpressionParser(
-			TOGoS_TOGES_Parser::getDefaultOperators(),
+			$this->getTestOperators(),
 			$symbolTable
 		);
 		return $expressionParser->astToExpression($ast);

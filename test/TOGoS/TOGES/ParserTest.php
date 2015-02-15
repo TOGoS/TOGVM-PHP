@@ -11,7 +11,7 @@ class TOGoS_TOGES_ParserTest extends TOGoS_TOGVM_MultiTestCase
 		$tokens = TOGoS_TOGES_Tokenizer::tokenize($source, $sourceLocation);
 		
 		$parserConfig = array(
-			'operators'         => TOGoS_TOGES_Parser::getDefaultOperators(),
+			'operators'         => $this->getTestOperators(),
 			'flushingOperators' => array("\n"));
 		$actualAst = TOGoS_TOGES_Parser::tokensToAst($tokens, $sourceLocation, $parserConfig);
 		
