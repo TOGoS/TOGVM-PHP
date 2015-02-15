@@ -52,7 +52,7 @@ class TOGoS_TOGES_ParseState_LValue extends TOGoS_TOGES_ParseState
 				return new TOGoS_TOGES_ParseState_Initial($this->PC, $bracket, function($ast) use ($bracket) {
 					$ast = array(
 						'type' => 'operation',
-						'operatorName' => $bracket['openBracket'].$bracket['closeBracket'],
+						'operatorName' => $bracket['openBracket'],
 						'operands' => array( $this->leftAst, $ast ),
 						'sourceLocation' => TOGoS_TOGES_Parser::mergeSourceLocations($this->leftAst['sourceLocation'], $ast['sourceLocation'])
 					);
@@ -118,7 +118,7 @@ class TOGoS_TOGES_ParseState_Infix extends TOGoS_TOGES_ParseState
 			return new TOGoS_TOGES_ParseState_Initial($this->PC, $bracket, function($ast,$closeBracketTi) use ($bracket,$openBracketTi) {
 				$ast = array(
 					'type' => 'operation',
-					'operatorName' => $bracket['openBracket'].$bracket['closeBracket'],
+					'operatorName' => $bracket['openBracket'],
 					'operands' => array( $ast ),
 					'sourceLocation' => TOGoS_TOGES_Parser::mergeSourceLocations(
 						$openBracketTi['sourceLocation'],
@@ -268,7 +268,7 @@ class TOGoS_TOGES_ParseState_Initial extends TOGoS_TOGES_ParseState
 			return new TOGoS_TOGES_ParseState_Initial($this->PC, $bracket, function($ast,$closeBracketTi) use ($bracket,$openBracketTi) {
 				$ast = array(
 					'type' => 'operation',
-					'operatorName' => $bracket['openBracket'].$bracket['closeBracket'],
+					'operatorName' => $bracket['openBracket'],
 					'operands' => array( $ast ),
 					'sourceLocation' => TOGoS_TOGES_Parser::mergeSourceLocations(
 						$openBracketTi['sourceLocation'],
