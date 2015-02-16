@@ -52,7 +52,7 @@ class TOGoS_TOGES_ParseState_LValue extends TOGoS_TOGES_ParseState
 				return new TOGoS_TOGES_ParseState_Initial($this->PC, $bracket, function($ast) use ($bracket) {
 					$ast = array(
 						'type' => 'operation',
-						'operatorName' => $bracket['openBracket'],
+						'operatorSymbol' => $bracket['openBracket'],
 						'operands' => ['left'=>$this->leftAst, 'inner'=>$ast],
 						'sourceLocation' => TOGoS_TOGES_Parser::mergeSourceLocations($this->leftAst['sourceLocation'], $ast['sourceLocation'])
 					);
@@ -82,13 +82,13 @@ class TOGoS_TOGES_ParseState_LValue extends TOGoS_TOGES_ParseState
 class TOGoS_TOGES_ParseState_Infix extends TOGoS_TOGES_ParseState
 {
 	protected $leftAst;
-	protected $operatorName;
+	protected $operatorSymbol;
 	protected $minPrecedence;
 	
 	public function __construct( TOGoS_TOGES_ParserConfig $PC, $leftAst, $opName, $minPrecedence, callable $astCallback ) {
 		parent::__construct($PC, $astCallback);
 		$this->leftAst = $leftAst;
-		$this->operatorName = $opName;
+		$this->operatorSymbol = $opName;
 		$this->minPrecedence = $minPrecedence;
 	}
 	
@@ -96,7 +96,7 @@ class TOGoS_TOGES_ParseState_Infix extends TOGoS_TOGES_ParseState
 		return new TOGoS_TOGES_ParseState_LValue($this->PC, $ast, $this->minPrecedence, function($ast) {
 			$ast = array(
 				'type' => 'operation',
-				'operatorName' => $this->operatorName,
+				'operatorSymbol' => $this->operatorSymbol,
 				'operands' => ['left'=>$this->leftAst, 'right'=>$ast],
 				'sourceLocation' => TOGoS_TOGES_Parser::mergeSourceLocations($this->leftAst['sourceLocation'], $ast['sourceLocation'])
 			);
@@ -118,7 +118,7 @@ class TOGoS_TOGES_ParseState_Infix extends TOGoS_TOGES_ParseState
 			return new TOGoS_TOGES_ParseState_Initial($this->PC, $bracket, function($ast,$closeBracketTi) use ($bracket,$openBracketTi) {
 				$ast = array(
 					'type' => 'operation',
-					'operatorName' => $bracket['openBracket'],
+					'operatorSymbol' => $bracket['openBracket'],
 					'operands' => ['inner'=>$ast], // should be 'inner', I think? Let's see if the unit test catches this.
 					'sourceLocation' => TOGoS_TOGES_Parser::mergeSourceLocations(
 						$openBracketTi['sourceLocation'],
@@ -130,18 +130,18 @@ class TOGoS_TOGES_ParseState_Infix extends TOGoS_TOGES_ParseState
 			});
 		case TOGoS_TOGES_Parser::TT_OPERATOR:
 			$op = $this->PC->operators[$ti['name']];
-			$myOp = $this->PC->operators[$this->operatorName];
+			$myOp = $this->PC->operators[$this->operatorSymbol];
 			
 			// Figure out if we can ignore one
 			// $keep = 'mine'|'new'|'both';
 			if( !empty($myOp['ignorableAsPostfix']) ) {
 				if( !empty($op['ignorableAsPrefix']) ) {
 					// If they're the same operator, ignore the new one because it's easier.
-					if( $ti['name'] == $this->operatorName ) {
+					if( $ti['name'] == $this->operatorSymbol ) {
 						$keep = 'mine';
 					} else if( $myOp['infixPrecedence'] == $op['infixPrecedence'] ) {
 						throw new TOGoS_TOGVM_ParseError(
-							"Uh oh; found ambiguously ignorable operators '{$this->operatorName}' and '{$ti['name']}' together!",
+							"Uh oh; found ambiguously ignorable operators '{$this->operatorSymbol}' and '{$ti['name']}' together!",
 							[$ti['sourceLocation']]);
 					}
 					// Go with the one with lower precedence!
@@ -175,8 +175,8 @@ class TOGoS_TOGES_ParseState_Infix extends TOGoS_TOGES_ParseState
 				// But that's for another day.
 				$this->utt($ti);
 			}
-		case TOGoS_TOGES_Parser::TT_EOF: case TOGoS_TOGES_Parser::TT_CLOSE_BRACKET:
-			if( !empty($this->PC->operators[$this->operatorName]['ignorableAsPostfix']) ) {
+		case TOGoS_TOGES_Parser::TT_CLOSE_BRACKET: case TOGoS_TOGES_Parser::TT_EOF:
+			if( !empty($this->PC->operators[$this->operatorSymbol]['ignorableAsPostfix']) ) {
 				return call_user_func( $this->astCallback, $this->leftAst, $ti )->_token($ti);
 			}
 			$this->utt($ti);
@@ -251,7 +251,7 @@ class TOGoS_TOGES_ParseState_Initial extends TOGoS_TOGES_ParseState
 		// This might end up being almost exactly the same as for Infix.
 		// Maybe they can share _token implementation somehow.
 		switch( $ti['type'] ) {
-		case TOGoS_TOGES_Parser::TT_CLOSE_BRACKET:
+		case TOGoS_TOGES_Parser::TT_CLOSE_BRACKET: case TOGoS_TOGES_Parser::TT_EOF:
 			if( $this->closeBracketMatches($ti) ) {
 				return $this->_ast(array('type'=>'void', 'sourceLocation'=>$ti['sourceLocation']))->_token($ti);
 			} else {
@@ -268,7 +268,7 @@ class TOGoS_TOGES_ParseState_Initial extends TOGoS_TOGES_ParseState
 			return new TOGoS_TOGES_ParseState_Initial($this->PC, $bracket, function($ast,$closeBracketTi) use ($bracket,$openBracketTi) {
 				$ast = array(
 					'type' => 'operation',
-					'operatorName' => $bracket['openBracket'],
+					'operatorSymbol' => $bracket['openBracket'],
 					'operands' => ['inner'=>$ast],
 					'sourceLocation' => TOGoS_TOGES_Parser::mergeSourceLocations(
 						$openBracketTi['sourceLocation'],

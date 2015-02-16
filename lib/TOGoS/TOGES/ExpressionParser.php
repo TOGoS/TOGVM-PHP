@@ -13,7 +13,7 @@ class TOGoS_TOGES_ExpressionParser
 	protected function parseArgumentList(array $ast, $homogeneousOperandOperatorName=null) {
 		if(
 			$ast['type'] == 'operation' and
-			$ast['operatorName'] == ',' || $ast['operatorName'] === $homogeneousOperandOperatorName
+			$ast['operatorSymbol'] == ',' || $ast['operatorSymbol'] === $homogeneousOperandOperatorName
 		) {
 			return array_merge(
 				$this->parseArgumentList($ast['operands']['left'], $homogeneousOperandOperatorName),
@@ -44,11 +44,11 @@ class TOGoS_TOGES_ExpressionParser
 			$expr['sourceLocation'] = $ast['sourceLocation'];
 			return $expr;
 		case 'operation':
-			if( !isset($this->operators[$ast['operatorName']]) ) {
-				throw new Exception("Unrecognized operator: '{$ast['operatorName']}'");
+			if( !isset($this->operators[$ast['operatorSymbol']]) ) {
+				throw new Exception("Unrecognized operator: '{$ast['operatorSymbol']}'");
 			}
 			$ods = implode(',',array_keys($ast['operands']));
-			$operator = $this->operators[$ast['operatorName']];
+			$operator = $this->operators[$ast['operatorSymbol']];
 			$functionUri = null;
 			if( $ods == 'inner' and isset($operator['circumfixFunctionUri']) ) {
 				// Look for 1-ary function (circumfix or prefix)
@@ -59,7 +59,7 @@ class TOGoS_TOGES_ExpressionParser
 			} else if( $ods == 'left,right' and isset($operator['infixFunctionUri']) ) {
 				$functionUri = $operator['infixFunctionUri'];
 			} else {
-				throw new Exception("Don't know how to convert ".count($ast['operands'])."-ary ($ods) ".$ast['operatorName']." AST node to expression");
+				throw new Exception("Don't know how to convert ".count($ast['operands'])."-ary ($ods) ".$ast['operatorSymbol']." AST node to expression");
 			}
 			
 			$arguments = array();
@@ -70,7 +70,7 @@ class TOGoS_TOGES_ExpressionParser
 			
 			if( $ods == 'left,right' ) {
 				if( !empty($operator['homogeneousOperands']) ) {
-					$argumentList = $this->parseArgumentList($ast, $ast['operatorName']);
+					$argumentList = $this->parseArgumentList($ast, $ast['operatorSymbol']);
 				} else {
 					$argumentList = [];
 					foreach( $ast['operands'] as $oper ) {
