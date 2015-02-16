@@ -53,7 +53,7 @@ class TOGoS_TOGES_ParseState_LValue extends TOGoS_TOGES_ParseState
 					$ast = array(
 						'type' => 'operation',
 						'operatorName' => $bracket['openBracket'],
-						'operands' => array( $this->leftAst, $ast ),
+						'operands' => ['left'=>$this->leftAst, 'inner'=>$ast],
 						'sourceLocation' => TOGoS_TOGES_Parser::mergeSourceLocations($this->leftAst['sourceLocation'], $ast['sourceLocation'])
 					);
 					return new TOGoS_TOGES_ParseState_LValue($this->PC, $ast, $this->minPrecedence, $this->astCallback);
@@ -97,7 +97,7 @@ class TOGoS_TOGES_ParseState_Infix extends TOGoS_TOGES_ParseState
 			$ast = array(
 				'type' => 'operation',
 				'operatorName' => $this->operatorName,
-				'operands' => array($this->leftAst, $ast),
+				'operands' => ['left'=>$this->leftAst, 'right'=>$ast],
 				'sourceLocation' => TOGoS_TOGES_Parser::mergeSourceLocations($this->leftAst['sourceLocation'], $ast['sourceLocation'])
 			);
 			return call_user_func($this->astCallback, $ast);
@@ -119,7 +119,7 @@ class TOGoS_TOGES_ParseState_Infix extends TOGoS_TOGES_ParseState
 				$ast = array(
 					'type' => 'operation',
 					'operatorName' => $bracket['openBracket'],
-					'operands' => array( $ast ),
+					'operands' => ['inner'=>$ast], // should be 'inner', I think? Let's see if the unit test catches this.
 					'sourceLocation' => TOGoS_TOGES_Parser::mergeSourceLocations(
 						$openBracketTi['sourceLocation'],
 						$ast['sourceLocation'],
@@ -269,7 +269,7 @@ class TOGoS_TOGES_ParseState_Initial extends TOGoS_TOGES_ParseState
 				$ast = array(
 					'type' => 'operation',
 					'operatorName' => $bracket['openBracket'],
-					'operands' => array( $ast ),
+					'operands' => ['inner'=>$ast],
 					'sourceLocation' => TOGoS_TOGES_Parser::mergeSourceLocations(
 						$openBracketTi['sourceLocation'],
 						$ast['sourceLocation'],

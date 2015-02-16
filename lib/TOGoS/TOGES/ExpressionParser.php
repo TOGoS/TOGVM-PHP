@@ -16,8 +16,8 @@ class TOGoS_TOGES_ExpressionParser
 			$ast['operatorName'] == ',' || $ast['operatorName'] === $homogeneousOperandOperatorName
 		) {
 			return array_merge(
-				$this->parseArgumentList($ast['operands'][0], $homogeneousOperandOperatorName),
-				$this->parseArgumentList($ast['operands'][1], $homogeneousOperandOperatorName)
+				$this->parseArgumentList($ast['operands']['left'], $homogeneousOperandOperatorName),
+				$this->parseArgumentList($ast['operands']['right'], $homogeneousOperandOperatorName)
 			);
 		} else {
 			return array($this->astToExpression($ast));
@@ -47,35 +47,42 @@ class TOGoS_TOGES_ExpressionParser
 			if( !isset($this->operators[$ast['operatorName']]) ) {
 				throw new Exception("Unrecognized operator: '{$ast['operatorName']}'");
 			}
+			$ods = implode(',',array_keys($ast['operands']));
 			$operator = $this->operators[$ast['operatorName']];
 			$functionUri = null;
-			if( count($ast['operands']) == 1 and isset($operator['circumfixFunctionUri']) ) {
+			if( $ods == 'inner' and isset($operator['circumfixFunctionUri']) ) {
 				// Look for 1-ary function (circumfix or prefix)
 				$functionUri = $operator['circumfixFunctionUri'];
-			} else if( count($ast['operands']) == 1 and isset($operator['prefixFunctionUri']) ) {
+			} else if( $ods == 'right' and isset($operator['prefixFunctionUri']) ) {
 				// Look for 1-ary function (circumfix or prefix)
 				$functionUri = $operator['prefixFunctionUri'];
-			} else if( count($ast['operands']) == 2 and isset($operator['infixFunctionUri']) ) {
+			} else if( $ods == 'left,right' and isset($operator['infixFunctionUri']) ) {
 				$functionUri = $operator['infixFunctionUri'];
 			} else {
-				throw new Exception("Don't know how to convert ".count($ast['operands'])."-ary ".$ast['operatorName']." AST node to expression");
+				throw new Exception("Don't know how to convert ".count($ast['operands'])."-ary ($ods) ".$ast['operatorName']." AST node to expression");
 			}
 			
 			$arguments = array();
-			$arguments[] = $this->astToExpression($ast['operands'][0]);
 			
 			if( count($ast['operands'] == 1) and $functionUri == 'http://ns.nuke24.net/TOGVM/Functions/Identity' ) {
-				return $arguments[0];
+				foreach( $ast['operands'] as $oper ) return $this->astToExpression($oper);
 			}
 			
-			if( count($ast['operands']) == 2 ) {
-				$argumentList = $this->parseArgumentList(
-					$ast['operands'][1],
-					!empty($operator['homogeneousOperands']) ? $ast['operatorName'] : null);
+			if( $ods == 'left,right' ) {
+				if( !empty($operator['homogeneousOperands']) ) {
+					$argumentList = $this->parseArgumentList($ast, $ast['operatorName']);
+				} else {
+					$argumentList = [];
+					foreach( $ast['operands'] as $oper ) {
+						$argumentList[] = $this->astToExpression($oper);
+					}
+				}
 				foreach( $argumentList as $k=>$arg ) {
 					if( is_string($k) ) $arguments[$k] = $arg;
 					else $arguments[] = $arg;
 				}
+			} else {
+				throw new Exception("Don't know how to deal with this: $functionUri, $ods");
 			}
 			return array(
 				'classUri' => 'http://ns.nuke24.net/TOGVM/Expressions/FunctionApplication',

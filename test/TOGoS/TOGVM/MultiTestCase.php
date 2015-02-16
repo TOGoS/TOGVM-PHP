@@ -58,6 +58,7 @@ abstract class TOGoS_TOGVM_MultiTestCase extends PHPUnit_Framework_TestCase
 			list($inputFile, $outputFile) = $p;
 			$input = file_get_contents($inputFile);
 			$output = file_get_contents($outputFile);
+			$this->setName(get_class($this)."#_testFilePair($inputFile, $outputFile)");
 			$this->_testFilePair($input, $inputFile, $output, $outputFile);
 			++$testCount;
 		}
