@@ -48,7 +48,7 @@ class TOGoS_TOGES_ParseState_LValue extends TOGoS_TOGES_ParseState
 		switch( $ti['type'] ) {
 		case TOGoS_TOGES_Parser::TT_OPEN_BRACKET:
 			$bracket = $this->PC->bracketsByOpenBracket[$ti['openBracket']];
-			if( $bracket['bracketPrecedence'] >= $this->minPrecedence ) {
+			if( $bracket['precedence'] >= $this->minPrecedence ) {
 				return new TOGoS_TOGES_ParseState_Initial($this->PC, $bracket, function($ast) use ($bracket) {
 					$ast = array(
 						'type' => 'operation',
@@ -61,13 +61,13 @@ class TOGoS_TOGES_ParseState_LValue extends TOGoS_TOGES_ParseState
 			}
 			return $this->letSomeoneElseHandle($ti);
 		case TOGoS_TOGES_Parser::TT_OPERATOR:
-			if( !isset($this->PC->operators[$ti['name']]) ) $this->utt($ti);
-			$op = $this->PC->operators[$ti['name']];
+			if( !isset($this->PC->infixOperatorsBySymbol[$ti['name']]) ) $this->utt($ti);
+			$op = $this->PC->infixOperatorsBySymbol[$ti['name']];
 			if(
-				$op['infixPrecedence'] > $this->minPrecedence or
-				$op['infixPrecedence'] == $this->minPrecedence && $op['associativity'] == 'right'
+				$op['precedence'] > $this->minPrecedence or
+				$op['precedence'] == $this->minPrecedence && $op['associativity'] == 'right'
 			) {
-				return new TOGoS_TOGES_ParseState_Infix( $this->PC, $this->leftAst, $ti['name'], $op['infixPrecedence'], function($ast) {
+				return new TOGoS_TOGES_ParseState_Infix( $this->PC, $this->leftAst, $ti['name'], $op['precedence'], function($ast) {
 					return new TOGoS_TOGES_ParseState_LValue($this->PC, $ast, $this->minPrecedence, $this->astCallback);
 				});
 			}
@@ -129,8 +129,8 @@ class TOGoS_TOGES_ParseState_Infix extends TOGoS_TOGES_ParseState
 				return new TOGoS_TOGES_ParseState_LValue($this->PC, $ast, 0, array($this,'_ast'));
 			});
 		case TOGoS_TOGES_Parser::TT_OPERATOR:
-			$op = $this->PC->operators[$ti['name']];
-			$myOp = $this->PC->operators[$this->operatorSymbol];
+			$op = $this->PC->infixOperatorsBySymbol[$ti['name']];
+			$myOp = $this->PC->infixOperatorsBySymbol[$this->operatorSymbol];
 			
 			// Figure out if we can ignore one
 			// $keep = 'mine'|'new'|'both';
@@ -139,13 +139,13 @@ class TOGoS_TOGES_ParseState_Infix extends TOGoS_TOGES_ParseState
 					// If they're the same operator, ignore the new one because it's easier.
 					if( $ti['name'] == $this->operatorSymbol ) {
 						$keep = 'mine';
-					} else if( $myOp['infixPrecedence'] == $op['infixPrecedence'] ) {
+					} else if( $myOp['precedence'] == $op['precedence'] ) {
 						throw new TOGoS_TOGVM_ParseError(
 							"Uh oh; found ambiguously ignorable operators '{$this->operatorSymbol}' and '{$ti['name']}' together!",
 							[$ti['sourceLocation']]);
 					}
 					// Go with the one with lower precedence!
-					$keep = $myOp['infixPrecedence'] < $op['infixPrecedence'] ? 'mine' : 'new';
+					$keep = $myOp['precedence'] < $op['precedence'] ? 'mine' : 'new';
 				} else {
 					$keep = 'new';
 				}
@@ -157,10 +157,10 @@ class TOGoS_TOGES_ParseState_Infix extends TOGoS_TOGES_ParseState
 
 			
 			if( $keep == 'new' ) {
-				if( $op['infixPrecedence'] == $this->minPrecedence ) {
+				if( $op['precedence'] == $this->minPrecedence ) {
 					// Ignore myOp by replacing it
-					return new TOGoS_TOGES_ParseState_Infix($this->PC, $this->leftAst, $ti['name'], $op['infixPrecedence'], $this->astCallback );
-				} else if( $op['infixPrecedence'] < $this->minPrecedence ) {
+					return new TOGoS_TOGES_ParseState_Infix($this->PC, $this->leftAst, $ti['name'], $op['precedence'], $this->astCallback );
+				} else if( $op['precedence'] < $this->minPrecedence ) {
 					// Ignore myOp by deferring upward
 					return call_user_func( $this->astCallback, $this->leftAst, $ti )->_token($ti);
 				} else {
@@ -176,7 +176,7 @@ class TOGoS_TOGES_ParseState_Infix extends TOGoS_TOGES_ParseState
 				$this->utt($ti);
 			}
 		case TOGoS_TOGES_Parser::TT_CLOSE_BRACKET: case TOGoS_TOGES_Parser::TT_EOF:
-			if( !empty($this->PC->operators[$this->operatorSymbol]['ignorableAsPostfix']) ) {
+			if( !empty($this->PC->infixOperatorsBySymbol[$this->operatorSymbol]['ignorableAsPostfix']) ) {
 				return call_user_func( $this->astCallback, $this->leftAst, $ti )->_token($ti);
 			}
 			$this->utt($ti);
@@ -279,12 +279,12 @@ class TOGoS_TOGES_ParseState_Initial extends TOGoS_TOGES_ParseState
 				return new TOGoS_TOGES_ParseState_LValue($this->PC, $ast, 0, array($this,'_ast'));
 			});
 		case TOGoS_TOGES_Parser::TT_OPERATOR:
-			if( isset($this->PC->operators[$ti['name']]) ) {
-				if( $this->PC->operators[$ti['name']]['ignorableAsPrefix'] ) {
+			if( isset($this->PC->infixOperatorsBySymbol[$ti['name']]['ignorableAsPrefix']) ) {
+				if( $this->PC->infixOperatorsBySymbol[$ti['name']]['ignorableAsPrefix'] ) {
 					return $this;
 				}
 			}
-			if( isset($this->PC->operators[$ti['name']]['prefixPrecedence']) ) {
+			if( isset($this->PC->prefixOperatorsBySymbol[$ti['name']]['precedence']) ) {
 				throw new Exception("Prefix operators not yet supported");
 			}
 		default: $this->utt($ti);
@@ -351,27 +351,43 @@ class TOGoS_TOGES_ParseState_EOF extends TOGoS_TOGES_ParseState
 class TOGoS_TOGES_ParserConfig
 {
 	public $operators;
-	public $bracketsByOpenBracket = array();
+	public $infixOperatorsBySymbol = [];
+	public $prefixOperatorsBySymbol = [];
+	public $postfixOperatorsBySymbol = [];
+	public $bracketsByOpenSymbol = [];
 	
 	public function __construct( $config ) {
 		$this->operators = $config['operators'];
-		foreach( $config['operators'] as $b ) if(isset($b['openBracket'])) {
-			$this->bracketsByOpenBracket[$b['openBracket']] = $b;
+		foreach( $config['operators'] as $oper ) {
+			switch( $oper['type'] ) {
+			case 'prefix':
+				$this->prefixOperatorsBySymbol[$oper['symbol']] = $oper;
+				break;
+			case 'infix':
+				$this->infixOperatorsBySymbol[$oper['symbol']] = $oper;
+				break;
+			case 'postfix':
+				$this->postfixOperatorsBySymbol[$oper['symbol']] = $oper;
+				break;
+			case 'bracket-pair':
+				$this->bracketsByOpenBracket[$oper['openBracket']] = $oper;
+				$this->bracketsByCloseBracket[$oper['closeBracket']] = $oper;
+				break;
+			default:
+				throw new Exception("Unrecognized operator type: '{$oper['type']}'");
+			}
 		}
+		//print_r($this);
 	}
 }
 
 class TOGoS_TOGES_Parser
 {
 	protected $PC;
-	protected $operators = array();
-	protected $bracketsByOpenBracket = array();
-	protected $bracketsByCloseBracket = array();
 	protected $astCallback;
 	
 	public function __construct( array $config, callable $astCallback ) {
 		$this->PC = new TOGoS_TOGES_ParserConfig($config);
-		$this->operators = $config['operators'];
 		$this->astCallback = $astCallback;
 		// For now, assuming 1 file = 1 expression
 		$fileBrackets = array('openBracket'=>'', 'closeBracket'=>'');
@@ -386,8 +402,8 @@ class TOGoS_TOGES_Parser
 			}
 		);
 		foreach( $config['operators'] as $b ) if(isset($b['openBracket'])) {
-			$this->bracketsByOpenBracket[$b['openBracket']] = $b;
-			$this->bracketsByCloseBracket[$b['closeBracket']] = $b;
+			$this->PC->bracketsByOpenBracket[$b['openBracket']] = $b;
+			$this->PC->bracketsByCloseBracket[$b['closeBracket']] = $b;
 		}
 	}
 	
@@ -401,21 +417,21 @@ class TOGoS_TOGES_Parser
 	public function parseToken( array $token ) {
 		switch( $token['quoting'] ) {
 		case 'bare':
-			if( isset($this->bracketsByOpenBracket[$token['value']]) ) {
+			if( isset($this->PC->bracketsByOpenBracket[$token['value']]) ) {
 				return array(
 					'type' => self::TT_OPEN_BRACKET,
 					'openBracket' => $token['value'],
-					'closeBracket' => $this->bracketsByOpenBracket[$token['value']]['closeBracket'],
+					'closeBracket' => $this->PC->bracketsByOpenBracket[$token['value']]['closeBracket'],
 					'sourceLocation' => $token['sourceLocation']
 				);
-			} else if( isset($this->bracketsByCloseBracket[$token['value']]) ) {
+			} else if( isset($this->PC->bracketsByCloseBracket[$token['value']]) ) {
 				return array(
 					'type' => self::TT_CLOSE_BRACKET,
 					'closeBracket' => $token['value'],
-					'openBracket' => $this->bracketsByCloseBracket[$token['value']]['openBracket'],
+					'openBracket' => $this->PC->bracketsByCloseBracket[$token['value']]['openBracket'],
 					'sourceLocation' => $token['sourceLocation']
 				);			 
-			} else if( isset($this->operators[$token['value']]) ) {
+			} else if( isset($this->PC->infixOperatorsBySymbol[$token['value']]) ) {
 				return array(
 					'type' => self::TT_OPERATOR,
 					'name' => $token['value'],

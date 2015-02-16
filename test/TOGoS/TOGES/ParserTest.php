@@ -10,9 +10,7 @@ class TOGoS_TOGES_ParserTest extends TOGoS_TOGVM_MultiTestCase
 		$sourceLocation = array('filename'=>$sourceFile, 'lineNumber'=>1, 'columnNumber'=>1);
 		$tokens = TOGoS_TOGES_Tokenizer::tokenize($source, $sourceLocation);
 		
-		$parserConfig = array(
-			'operators'         => $this->getTestOperators(),
-			'flushingOperators' => array("\n"));
+		$parserConfig = $this->getTestLanguageConfig();
 		$actualAst = TOGoS_TOGES_Parser::tokensToAst($tokens, $sourceLocation, $parserConfig);
 		
 		TOGoS_TOGVM_TestUtil::matchSourceLocateyness($expectedAst, $actualAst);

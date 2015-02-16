@@ -17,8 +17,10 @@ abstract class TOGoS_TOGVM_MultiTestCase extends PHPUnit_Framework_TestCase
 		throw new Exception("Couldn't find 'test-vectors' directory.");
 	}
 
-	protected function getTestOperators() {
-		return TOGoS_TOGES_Util::loadOperators($this->findTestVectorDirectory().'/test-operators.json');
+	protected function getTestLanguageConfig() {
+		$config = TOGoS_TOGES_Util::loadOperators($this->findTestVectorDirectory().'/test-language.json');
+		$config['flushingOperators'] = ["\n"];
+		return $config;
 	}
 	
 	protected function getTestVectorFilePairs() {

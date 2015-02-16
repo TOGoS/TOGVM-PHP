@@ -2,12 +2,25 @@
 
 class TOGoS_TOGES_ExpressionParser
 {
-	protected $operators;
+	protected $languageConfig;
 	protected $wordExpansions;
+	protected $operatorsBySymbol = [];
 	
-	public function __construct(array $operators, $wordExpansions) {
-		$this->operators = $operators;
+	public function __construct(array $languageConfig, $wordExpansions) {
+		$this->languageConfig = $languageConfig;
 		$this->wordExpansions = $wordExpansions;
+		foreach( $this->languageConfig['operators'] as $oper ) {
+			switch( $oper['type'] ) {
+			case 'infix': case 'prefix': case 'postfix':
+				$this->operatorsBySymbol[$oper['symbol']] = $oper;
+				break;
+			case 'bracket-pair':
+				$this->operatorsBySymbol[$oper['openBracket']] = $oper;
+				break;
+			default:
+				throw new Exception("Unrecognized operator type in language config: '{$oper['type']}'");
+			}
+		}
 	}
 	
 	protected function parseArgumentList(array $ast, $homogeneousOperandOperatorName=null) {
@@ -44,22 +57,22 @@ class TOGoS_TOGES_ExpressionParser
 			$expr['sourceLocation'] = $ast['sourceLocation'];
 			return $expr;
 		case 'operation':
-			if( !isset($this->operators[$ast['operatorSymbol']]) ) {
+			if( !isset($this->operatorsBySymbol[$ast['operatorSymbol']]) ) {
 				throw new Exception("Unrecognized operator: '{$ast['operatorSymbol']}'");
 			}
 			$ods = implode(',',array_keys($ast['operands']));
-			$operator = $this->operators[$ast['operatorSymbol']];
+			$operator = $this->operatorsBySymbol[$ast['operatorSymbol']];
 			$functionUri = null;
-			if( $ods == 'inner' and isset($operator['circumfixFunctionUri']) ) {
+			if( $ods == 'inner' and isset($operator['circumfixMeaning']['functionUri']) ) {
 				// Look for 1-ary function (circumfix or prefix)
-				$functionUri = $operator['circumfixFunctionUri'];
-			} else if( $ods == 'right' and isset($operator['prefixFunctionUri']) ) {
+				$functionUri = $operator['circumfixMeaning']['functionUri'];
+			} else if( $ods == 'right' and isset($operator['meaning']['functionUri']) ) {
 				// Look for 1-ary function (circumfix or prefix)
-				$functionUri = $operator['prefixFunctionUri'];
-			} else if( $ods == 'left,right' and isset($operator['infixFunctionUri']) ) {
-				$functionUri = $operator['infixFunctionUri'];
+				$functionUri = $operator['meaning']['functionUri'];
+			} else if( $ods == 'left,right' and isset($operator['meaning']['functionUri']) ) {
+				$functionUri = $operator['meaning']['functionUri'];
 			} else {
-				throw new Exception("Don't know how to convert ".count($ast['operands'])."-ary ($ods) ".$ast['operatorSymbol']." AST node to expression");
+				throw new Exception("Don't know how to convert ".count($ast['operands'])."-ary '".$ast['operatorSymbol']."'($ods) AST node to expression");
 			}
 			
 			$arguments = array();
@@ -98,11 +111,7 @@ class TOGoS_TOGES_ExpressionParser
 	public function sourceToExpression($source, array $sourceLocation) {
 		$tokens = TOGoS_TOGES_Tokenizer::tokenize($source, $sourceLocation);
 		
-		$parserConfig = [
-			'operators'         => $this->operators,
-			'flushingOperators' => ["\n"]
-		];
-		$ast = TOGoS_TOGES_Parser::tokensToAst($tokens, $sourceLocation, $parserConfig);
+		$ast = TOGoS_TOGES_Parser::tokensToAst($tokens, $sourceLocation, $this->languageConfig);
 		
 		return $this->astToExpression($ast);
 	}

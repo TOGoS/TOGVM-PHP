@@ -9,10 +9,7 @@ class TOGoS_TOGES_ExpressionParserTest extends TOGoS_TOGVM_MultiTestCase
 		$sourceLocation = ['filename'=>$sourceFile, 'lineNumber'=>1, 'columnNumber'=>1];
 		$tokens = TOGoS_TOGES_Tokenizer::tokenize($source, $sourceLocation);
 		
-		$parserConfig = [
-			'operators'         => $this->getTestOperators(),
-			'flushingOperators' => ["\n"]
-		];
+		$parserConfig = $this->getTestLanguageConfig();
 		return TOGoS_TOGES_Parser::tokensToAst($tokens, $sourceLocation, $parserConfig);
 	}
 
@@ -26,7 +23,7 @@ class TOGoS_TOGES_ExpressionParserTest extends TOGoS_TOGVM_MultiTestCase
 		);
 		
 		$expressionParser = new TOGoS_TOGES_ExpressionParser(
-			$this->getTestOperators(),
+			$this->getTestLanguageConfig(),
 			$symbolTable
 		);
 		return $expressionParser->astToExpression($ast);
