@@ -4,8 +4,8 @@ class TOGoS_TOGES_OverrideSymbolTable extends TOGoS_TOGVM_FakeArray
 {
 	protected $tables;
 	
-	public function __construct() {
-		$this->tables = func_get_args();
+	public function __construct( $tables ) {
+		$this->tables = $tables;
 	}
 	
 	public function offsetExists($k) {

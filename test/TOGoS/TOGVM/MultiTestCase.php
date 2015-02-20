@@ -16,15 +16,23 @@ abstract class TOGoS_TOGVM_MultiTestCase extends PHPUnit_Framework_TestCase
 		}
 		throw new Exception("Couldn't find 'test-vectors' directory.");
 	}
+	
+	protected $testVectorDir;
+	protected function getTestVectorDirectory() {
+		if( $this->testVectorDir === null ) {
+			$this->testVectorDir = $this->findTestVectorDirectory();
+		}
+		return $this->testVectorDir;
+	}
 
 	protected function getTestLanguageConfig() {
-		$config = TOGoS_TOGES_Util::loadOperators($this->findTestVectorDirectory().'/test-language.json');
+		$config = TOGoS_TOGES_Util::loadOperators($this->getTestVectorDirectory().'/test-language.json');
 		$config['flushingOperators'] = ["\n"];
 		return $config;
 	}
 	
 	protected function getTestVectorFilePairs() {
-		$testVectorSubdir = $this->findTestVectorDirectory().'/'.$this->getTestVectorSubdirectoryName();
+		$testVectorSubdir = $this->getTestVectorDirectory().'/'.$this->getTestVectorSubdirectoryName();
 		
 		$list = array();
 		$dh = opendir($testVectorSubdir);

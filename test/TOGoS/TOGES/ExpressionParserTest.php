@@ -16,11 +16,12 @@ class TOGoS_TOGES_ExpressionParserTest extends TOGoS_TOGVM_MultiTestCase
 	protected function parseExpression($source, $sourceFile) {
 		$ast = $this->parseAst($source, basename($sourceFile));
 		
-		$symbolTable = new TOGoS_TOGES_OverrideSymbolTable(
+		$symbolTable = new TOGoS_TOGES_OverrideSymbolTable([
 			['forty two' => ['classUri'=>'http://ns.nuke24.net/TOGVM/Expressions/LiteralInteger','literalValue'=>42]],
 			new TOGoS_TOGES_NumberLiteralSymbolTable(),
+			new TOGoS_TOGES_HashURNSymbolTable(),
 			new TOGoS_TOGES_VariableSymbolTable()
-		);
+		]);
 		
 		$expressionParser = new TOGoS_TOGES_ExpressionParser(
 			$this->getTestLanguageConfig(),

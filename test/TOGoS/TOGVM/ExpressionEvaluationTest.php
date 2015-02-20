@@ -6,8 +6,18 @@ class TOGoS_TOGVM_ExpressionEvaluationTest extends TOGoS_TOGVM_MultiTestCase
 	protected function getTestVectorExtensions() { return array('json','expected-value'); }
 	
 	protected function setUp() {
+		$repos = [];
+		$repos[] = new TOGoS_PHPN2R_FSSHA1Repository($this->getTestVectorDirectory());
+		$this->blobFetcher = function($urn) use ($repos) {
+			foreach( $repos as $repo ) {
+				if( ($blob = $repo->getBlob($urn)) !== null ) return $blob;
+			}
+		};
 		$this->interpreter = new TOGoS_TOGVM_Interpreter( array(
 			'functions' => array(
+				'http://ns.nuke24.net/TOGVM/Functions/ResolveHashURN' => function($arguments) {
+					return call_user_func($this->blobFetcher, $arguments[0]);
+				},
 				'http://ns.nuke24.net/TOGVM/Functions/Concatenate' => function($arguments) {
 					// TODO: Concatenate might work on sequences other than strings.
 					// Need to check type of operands.
