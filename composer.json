@@ -5,7 +5,7 @@
 			"type": "package",
 			"package": {
 				"name": "togos/togvm-spec",
-				"version": "0.2.0",
+				"version": "0.3.0",
 				"source": {
 					"url": "https://github.com/TOGoS/TOGVM-Spec.git",
 					"type": "git",

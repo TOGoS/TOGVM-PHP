@@ -10,15 +10,12 @@ class TOGoS_TOGES_ExpressionParser
 		$this->languageConfig = $languageConfig;
 		$this->wordExpansions = $wordExpansions;
 		foreach( $this->languageConfig['operators'] as $oper ) {
-			switch( $oper['type'] ) {
-			case 'infix': case 'prefix': case 'postfix':
+			if( isset($oper['symbol'])) {
 				$this->operatorsBySymbol[$oper['symbol']] = $oper;
-				break;
-			case 'bracket-pair':
+			} else if( isset($oper['openBracket']) ) {
 				$this->operatorsBySymbol[$oper['openBracket']] = $oper;
-				break;
-			default:
-				throw new Exception("Unrecognized operator type in language config: '{$oper['type']}'");
+			} else {
+				throw new Exception("Unrecognized operator type in language config: ".json_encode($oper));
 			}
 		}
 	}
@@ -66,11 +63,11 @@ class TOGoS_TOGES_ExpressionParser
 			if( $ods == 'inner' and isset($operator['circumfixMeaning']['functionUri']) ) {
 				// Look for 1-ary function (circumfix or prefix)
 				$functionUri = $operator['circumfixMeaning']['functionUri'];
-			} else if( $ods == 'right' and isset($operator['meaning']['functionUri']) ) {
+			} else if( $ods == 'right' and isset($operator['infixMeaning']['functionUri']) ) {
 				// Look for 1-ary function (circumfix or prefix)
-				$functionUri = $operator['meaning']['functionUri'];
-			} else if( $ods == 'left,right' and isset($operator['meaning']['functionUri']) ) {
-				$functionUri = $operator['meaning']['functionUri'];
+				$functionUri = $operator['infixMeaning']['functionUri'];
+			} else if( $ods == 'left,right' and isset($operator['infixMeaning']['functionUri']) ) {
+				$functionUri = $operator['infixMeaning']['functionUri'];
 			} else {
 				throw new Exception("Don't know how to convert ".count($ast['operands'])."-ary '".$ast['operatorSymbol']."'($ods) AST node to expression");
 			}
