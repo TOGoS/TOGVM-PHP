@@ -11,14 +11,14 @@ class TOGoS_TOGES_ParserTest extends TOGoS_TOGVM_MultiTestCase
 		$tokens = TOGoS_TOGES_Tokenizer::tokenize($source, $sourceLocation);
 		
 		$parserConfig = $this->getTestLanguageConfig();
-		$actualAst = TOGoS_TOGES_Parser::tokensToAst($tokens, $sourceLocation, $parserConfig);
+		$parsedAst = TOGoS_TOGES_Parser::tokensToAst($tokens, $sourceLocation, $parserConfig);
+		$simplifiedAst = TOGoS_TOGES_ASTSimplifier::simplify($parsedAst, $parserConfig);
+		TOGoS_TOGVM_TestUtil::matchSourceLocateyness($expectedAst, $simplifiedAst);
 		
-		TOGoS_TOGVM_TestUtil::matchSourceLocateyness($expectedAst, $actualAst);
-		
-		$this->assertEquals($expectedAst, $actualAst,
+		$this->assertEquals($expectedAst, $simplifiedAst,
 			"{$sourceFile} didn't parse right;\n".
 			"parsed\n\n  ".str_replace("\n","\n  ",$source)."\n".
-			"AST = ".EarthIT_JSON::prettyEncode($actualAst));
+			"AST = ".EarthIT_JSON::prettyEncode($simplifiedAst));
 	}
 	
 	public function _testFilePair($source, $sourceFile, $expectedAstJson, $expectedAstJsonFile) {
