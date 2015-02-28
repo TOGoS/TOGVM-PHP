@@ -15,7 +15,7 @@ class TOGoS_TOGES_ASTReemissionTest extends TOGoS_TOGVM_MultiTestCase
 			$this->operatorsBySymbol = [];
 			$lang = $this->getTestLanguageConfig();
 			foreach( $lang['operators'] as $op ) {
-				if( $op['type'] == 'bracket-pair' ) {
+				if( isset($op['openBracket']) ) {
 					$s = $op['openBracket'];
 				} else {
 					$s = $op['symbol'];
@@ -38,8 +38,12 @@ class TOGoS_TOGES_ASTReemissionTest extends TOGoS_TOGVM_MultiTestCase
 			$operator = $this->getOperatorBySymbol($ast['operatorSymbol']);
 			
 			switch( $ks = implode(',',array_keys($ast['operands'])) ) {
+			case 'left':
+				return "{$operator['symbol']} ".$operandSources['left'];
 			case 'left,right':
 				return implode(" {$operator['symbol']} ", $operandSources);
+			case 'right':
+				return $operandSources['right']." {$operator['symbol']}";
 			case 'left,inner':
 				return $operandSources['left'].$operator['openBracket'].$operandSources['inner'].$operator['closeBracket'];
 			case 'inner':

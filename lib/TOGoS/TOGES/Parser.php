@@ -91,9 +91,13 @@ class TOGoS_TOGES_ParseState_Infix extends TOGoS_TOGES_ParseState
 		$this->operatorSymbol = $opName;
 		$this->minPrecedence = $minPrecedence;
 	}
-	
+
+	/** Called when a right AST (not necessarily the whole thing) is read */
 	public function _ast( array $ast ) {
 		return new TOGoS_TOGES_ParseState_LValue($this->PC, $ast, $this->minPrecedence, function($ast) {
+			if( !isset($this->leftAst['sourceLocation']['lineNumber']) ) {
+				throw new Exception("Left AST messed up: ".EarthIT_JSON::prettyEncode($this->leftAst));
+			}
 			$ast = array(
 				'type' => 'operation',
 				'operatorSymbol' => $this->operatorSymbol,
@@ -126,7 +130,7 @@ class TOGoS_TOGES_ParseState_Infix extends TOGoS_TOGES_ParseState
 						$closeBracketTi['sourceLocation']
 					)
 				);
-				return new TOGoS_TOGES_ParseState_LValue($this->PC, $ast, 0, array($this,'_ast'));
+				return new TOGoS_TOGES_ParseState_LValue($this->PC, $ast, $this->minPrecedence, array($this,'_ast'));
 			});
 		case TOGoS_TOGES_Parser::TT_OPERATOR:
 			$op = $this->PC->operatorsBySymbol[$ti['name']];
@@ -158,6 +162,9 @@ class TOGoS_TOGES_ParseState_Infix extends TOGoS_TOGES_ParseState
 			}
 			
 			if( $keep == 'new' ) {
+				// Defer upwards.
+				return call_user_func( $this->astCallback, $this->leftAst, $ti )->_token($ti);
+
 				if( $op['precedence'] == $this->minPrecedence ) {
 					// Ignore myOp by replacing it
 					return new TOGoS_TOGES_ParseState_Infix($this->PC, $this->leftAst, $ti['name'], $op['precedence'], $this->astCallback );
@@ -165,22 +172,103 @@ class TOGoS_TOGES_ParseState_Infix extends TOGoS_TOGES_ParseState
 					// Ignore myOp by deferring upward
 					return call_user_func( $this->astCallback, $this->leftAst, $ti )->_token($ti);
 				} else {
-					// e.g. foo ; + bar, where + isn't a prefix operator
+					// e.g. foo \n + bar
 					$this->utt($ti);
 				}
-			} else if( $keep == 'mine' ) {
+			}
+			if( $keep == 'mine' ) {
 				return $this;
+			}
+			
+			// One of them's prefix/postfix.
+			if( $myOp['precedence'] > $op['precedence'] ) {
+				// We're postfix!
+				$leftAst = array(
+					'type' => 'operation',
+					'operatorSymbol' => $myOp['symbol'],
+					'operands' => ['left'=>$this->leftAst],
+					'sourceLocation' => TOGoS_TOGES_Parser::mergeSourceLocations($this->leftAst['sourceLocation']) // This isn't right.  Need the token that gave us our postfix operator.
+				);
+				return new TOGoS_TOGES_ParseState_Infix($this->PC, $leftAst, $ti['name'], $op['precedence'], $this->astCallback);
 			} else {
-				// We can't keep both!
-				// Unless one or other is a post/prefix operator...
-				// But that's for another day.
-				$this->utt($ti);
+				// It's prefix!
+				return new TOGoS_TOGES_ParseState_Prefix( $this->PC, $ti, $op['precedence'], function($ast) {
+					return new TOGoS_TOGES_ParseState_LValue($this->PC, $ast, $this->minPrecedence, array($this,'_ast'));
+				});
 			}
 		case TOGoS_TOGES_Parser::TT_CLOSE_BRACKET: case TOGoS_TOGES_Parser::TT_EOF:
 			if( TOGoS_TOGES_Parser::operatorIgnorableAs($this->PC->operatorsBySymbol[$this->operatorSymbol], 'postfix') ) {
 				return call_user_func( $this->astCallback, $this->leftAst, $ti )->_token($ti);
 			}
 			$this->utt($ti);
+		default: $this->utt($ti);
+		}
+	}
+}
+
+class TOGoS_TOGES_ParseState_Prefix extends TOGoS_TOGES_ParseState
+{
+	protected $operatorTi;
+	protected $minPrecedence;
+	
+	public function __construct( TOGoS_TOGES_ParserConfig $PC, $opTi, $minPrecedence, callable $astCallback ) {
+		parent::__construct($PC, $astCallback);
+		$this->operatorTi = $opTi;
+		$this->minPrecedence = $minPrecedence;
+	}
+
+	/** Called when the right AST is read */
+	public function _ast( array $ast ) {
+		return new TOGoS_TOGES_ParseState_LValue($this->PC, $ast, $this->minPrecedence, function($ast) {
+			$ast = array(
+				'type' => 'operation',
+				'operatorSymbol' => $this->operatorTi['name'],
+				'operands' => ['left'=>$ast],
+				'sourceLocation' => TOGoS_TOGES_Parser::mergeSourceLocations($this->operatorTi['sourceLocation'], $ast['sourceLocation'])
+			);
+			return call_user_func($this->astCallback, $ast);
+		});
+	}
+	
+	// TODO: This shares a lot in common with Initial#_token; should probably make them share somehow
+	public function _token( array $ti ) {
+		switch( $ti['type'] ) {
+		case TOGoS_TOGES_Parser::TT_CLOSE_BRACKET: case TOGoS_TOGES_Parser::TT_EOF:
+			// Punt.
+			return $this->_ast( array('type' => 'void', 'sourceLocation'=>$ti['sourceLocation']) )->_token($ti);
+		case TOGoS_TOGES_Parser::TT_LITERAL:
+			$ast = array('type'=>'literal', 'value'=>$ti['value'], 'sourceLocation'=>$ti['sourceLocation']);
+			return $this->_ast($ast);
+		case TOGoS_TOGES_Parser::TT_WORD:
+			return new TOGoS_TOGES_ParseState_Word($this->PC, array($ti['value']), $ti['sourceLocation'], array($this,'_ast'));
+		case TOGoS_TOGES_Parser::TT_OPEN_BRACKET:
+			$openBracketTi = $ti;
+			$bracket = $this->PC->operatorsByOpenBracket[$openBracketTi['openBracket']];
+			return new TOGoS_TOGES_ParseState_Initial($this->PC, $bracket, function($ast,$closeBracketTi) use ($bracket,$openBracketTi) {
+				$ast = array(
+					'type' => 'operation',
+					'operatorSymbol' => $bracket['openBracket'],
+					'operands' => ['inner'=>$ast],
+					'sourceLocation' => TOGoS_TOGES_Parser::mergeSourceLocations(
+						$openBracketTi['sourceLocation'],
+						$ast['sourceLocation'],
+						$closeBracketTi['sourceLocation']
+					)
+				);
+				return new TOGoS_TOGES_ParseState_LValue($this->PC, $ast, $this->minPrecedence, array($this,'_ast'));
+			});
+		case TOGoS_TOGES_Parser::TT_OPERATOR:
+			$op = $this->PC->operatorsBySymbol[$ti['name']];
+			$myOp = $this->PC->operatorsBySymbol[$this->operatorTi['name']];
+			if( TOGoS_TOGES_Parser::operatorIgnorableAs($op,'prefix') ) return $this;
+			if( $op['precedence'] < $myOp['precedence'] ) {
+				$this->utt($ti);
+			}
+			
+			// Another prefix!
+			return new TOGoS_TOGES_ParseState_Prefix( $this->PC, $ti, $op['precedence'], function($ast) {
+				return new TOGoS_TOGES_ParseState_LValue($this->PC, $ast, $this->minPrecedence, array($this,'_ast'));
+			});
 		default: $this->utt($ti);
 		}
 	}
@@ -280,12 +368,9 @@ class TOGoS_TOGES_ParseState_Initial extends TOGoS_TOGES_ParseState
 				return new TOGoS_TOGES_ParseState_LValue($this->PC, $ast, 0, array($this,'_ast'));
 			});
 		case TOGoS_TOGES_Parser::TT_OPERATOR:
-			if( TOGoS_TOGES_Parser::operatorIgnorableAs($this->PC->operatorsBySymbol[$ti['name']],'prefix') ) {
-				return $this;
-			}
-			if( isset($this->PC->prefixOperatorsBySymbol[$ti['name']]['precedence']) ) {
-				throw new Exception("Prefix operators not yet supported");
-			}
+			$operator = $this->PC->operatorsBySymbol[$ti['name']];
+			if( TOGoS_TOGES_Parser::operatorIgnorableAs($operator,'prefix') ) return $this;
+			return new TOGoS_TOGES_ParseState_Prefix($this->PC, $ti, $operator['precedence'], array($this,'_ast'));
 		default: $this->utt($ti);
 		}
 	}
@@ -468,18 +553,25 @@ class TOGoS_TOGES_Parser
 	public static function mergeSourceLocations() {
 		$merged = null;
 		foreach( func_get_args() as $sl ) {
-			if( $merged === null ) $merged = $sl;
-			else {
-				if( $sl['lineNumber'] < $merged['lineNumber'] or
-				    $sl['lineNumber'] == $merged['lineNumber'] && $sl['columnNumber'] < $merged['columnNumber'] ) {
-					$merged['lineNumber'] = $sl['lineNumber'];
-					$merged['columnNumber'] = $sl['columnNumber'];
-				}
-				if( $sl['endLineNumber'] > $merged['endLineNumber'] or
-					 $sl['endLineNumber'] == $merged['endLineNumber'] && $sl['endColumnNumber'] > $merged['endColumnNumber'] ) {
-					$merged['endLineNumber'] = $sl['endLineNumber'];
-					$merged['endColumnNumber'] = $sl['endColumnNumber'];
-				}
+			if( !isset($sl['lineNumber']) ) {
+				throw new Exception("Not a valid source location: ".EarthIT_JSON::prettyEncode($sl));
+			}
+		
+			if( $merged === null ) {
+				$merged = $sl;
+				continue;
+			}
+			if( !isset($sl['lineNumber']) ) throw new Exception("No \$sl['lineNumber']: ".json_encode($sl));
+			if( !isset($merged['lineNumber']) ) throw new Exception("No \$merged['lineNumber']: ".json_encode($merged));
+			if( $sl['lineNumber'] < $merged['lineNumber'] or
+			    $sl['lineNumber'] == $merged['lineNumber'] && $sl['columnNumber'] < $merged['columnNumber'] ) {
+				$merged['lineNumber'] = $sl['lineNumber'];
+				$merged['columnNumber'] = $sl['columnNumber'];
+			}
+			if( $sl['endLineNumber'] > $merged['endLineNumber'] or
+			    $sl['endLineNumber'] == $merged['endLineNumber'] && $sl['endColumnNumber'] > $merged['endColumnNumber'] ) {
+				$merged['endLineNumber'] = $sl['endLineNumber'];
+				$merged['endColumnNumber'] = $sl['endColumnNumber'];
 			}
 		}
 		return $merged;
@@ -501,8 +593,17 @@ class TOGoS_TOGES_Parser
 		$this->state = $newState;
 	}
 	
+	protected static function validateThingWithSourceLocation( array $thing ) {
+		if( !isset($thing['sourceLocation']['lineNumber']) ) {
+			throw new Exception("Thing doesn't have a valid sourceLocation: ".EarthIT_JSON::prettyEncode($thing));
+		}
+	}
+	
 	public function token( array $token ) {
-		$this->_token( $this->parseToken($token) );
+		self::validateThingWithSourceLocation($token);
+		$ti = $this->parseToken($token);
+		self::validateThingWithSourceLocation($ti);
+		$this->_token( $ti );
 	}
 	
 	/** Indicate that the end of the input file has been reached. */
