@@ -2,16 +2,59 @@
 
 class TOGoS_TOGES_ASTSimplifier
 {
+	protected static function operandNamesToFixity( $names ) {
+		if( !is_string($names) ) throw new Exception("Expected \$names to be a comma-separated string.");
+		
+		switch( $names ) {
+		case 'left': return 'postfix';
+		case 'right': return 'prefix';
+		case 'left,right': return 'infix';
+		case 'inner': return 'circumfix';
+		case 'left,inner,right': return 'infix';
+		case 'left,inner': return 'postfix';
+		case 'inner,right': return 'prefix';
+		default: throw new Exception("No name for fixity with operand names '$names'");
+		}
+	}
+	
 	protected static function _simplify( array $ast, array $rules ) {
 		if( $ast['type'] == 'operation' ) {
+			$symbol = $ast['operatorSymbol'];
+			$operator = $rules['operatorsBySymbol'][$symbol];
+			$operandNameStr = implode(',',array_keys($ast['operands']));
+			$fixity = self::operandNamesToFixity($operandNameStr);
+
+			if( !isset($operator["{$fixity}Meaning"]) ) {
+				throw new TOGoS_TOGVM_ParseError( "No '{$fixity}' meaning for '$symbol'", [$ast['sourceLocation']] );
+			}
+			$meaning = $operator["{$fixity}Meaning"];
+			
 			$simplifiedOperands = [];
 			foreach( $ast['operands'] as $k=>$operand ) {
 				$simplifiedOperands[$k] = self::_simplify($operand, $rules);
 			}
-			$p = implode(',',array_keys($simplifiedOperands));
-			if( isset($rules['ignoreUnaryOperators'][$p][$ast['operatorSymbol']]) ) {
-				foreach( $simplifiedOperands as $s ) return $s;
+			
+			$nonVoidOperands = [];
+			foreach( $simplifiedOperands as $k=>$operand ) {
+				if( $operand['type'] != 'void' ) {
+					$nonVoidOperands[$k] = $operand;
+				}
 			}
+			
+			if( $meaning == 'ignore' || $meaning == 'statement-delimiter' ) {
+				if( count($nonVoidOperands) == 0 ) {
+					// Then the whole thing's just void.
+					foreach($simplifiedOperands as $k=>$operand) {
+						return $operand;
+					}
+				}
+				if( count($nonVoidOperands) == 1 ) {
+					foreach($nonVoidOperands as $o) {
+						return $o;
+					}
+				}
+			}
+			
 			$ast['operands'] = $simplifiedOperands;
 			return $ast;
 		} else {
@@ -20,19 +63,16 @@ class TOGoS_TOGES_ASTSimplifier
 	}
 	
 	protected static function simplificationRules( array $languageConfig ) {
-		$rules = ['ignoreUnaryOperators'=>['left'=>[]],['right'=>[]]];
+		$rules = ['operatorsBySymbol' => []];
 		foreach( $languageConfig['operators'] as $oper ) {
 			if( isset($oper['symbol']) ) {
-				foreach( ['prefix'=>'right', 'postfix'=>'left'] as $fixity=>$operandPosition ) {
-					if(
-						isset($oper["{$fixity}Meaning"]) and
-						$oper["{$fixity}Meaning"] == 'statement-delimiter' ||
-						$oper["{$fixity}Meaning"] == 'ignore'
-					) {
-						$rules['ignoreUnaryOperators'][$operandPosition][$oper['symbol']] = $oper['symbol'];
-					}
-				}
+				$symbol = $oper['symbol'];
+			} else if( isset($oper['openBracket']) ) {
+				$symbol = $oper['openBracket'];
+			} else {
+				throw new Exception("Operator has neither 'symbol' nor 'openBracket': ".json_encode($oper));
 			}
+			$rules['operatorsBySymbol'][$symbol] = $oper;
 		}
 		return $rules;
 	}

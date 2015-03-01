@@ -81,6 +81,10 @@ class TOGoS_TOGES_ASTReemissionTest extends TOGoS_TOGVM_MultiTestCase
 			$ast = TOGoS_TOGES_Parser::tokensToAst($tokens, $sourceLocation, $parserConfig);
 			$reemitted = $this->toSourceWithParens($ast);
 			$this->assertEquals( $parensLines[$i], $reemitted, $source." parsed as: ".EarthIT_JSON::prettyEncode($ast) );
+			
+			$simplified = TOGoS_TOGES_ASTSimplifier::simplify($ast, $parserConfig);
+			$simplifiedReemitted = $this->toSourceWithParens($ast);
+			$this->assertEquals( $parensLines[$i], $simplifiedReemitted, $source." parsed/simplified as: ".EarthIT_JSON::prettyEncode($ast) );
 		}
 	}
 }
