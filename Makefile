@@ -3,7 +3,8 @@ default: run-unit-tests
 .PHONY: \
 	clean \
 	default \
-	run-unit-tests
+	run-unit-tests \
+	test-dependencies
 
 clean:
 	rm -rf vendor composer.lock
@@ -15,5 +16,7 @@ vendor: composer.lock
 	composer install
 	touch "$@"
 
-run-unit-tests: vendor
+test-dependencies: vendor
+
+run-unit-tests: test-dependencies
 	vendor/bin/phpunit --bootstrap vendor/autoload.php test

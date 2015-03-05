@@ -9,9 +9,8 @@ php:
   - nightly
 
 # execute any number of scripts before the test run, custom env's are available as variables
-install:
-  - composer install
+install: make test-dependencies
 
 # omitting "script:" will default to phpunit
 # use the $DB env variable to determine the phpunit.xml to use
-script: phpunit --bootstrap vendor/bootstrap.php test
+script: make run-unit-tests
