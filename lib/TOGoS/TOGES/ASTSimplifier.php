@@ -24,10 +24,12 @@ class TOGoS_TOGES_ASTSimplifier
 			$operandNameStr = implode(',',array_keys($ast['operands']));
 			$fixity = self::operandNamesToFixity($operandNameStr);
 
-			if( !isset($operator["{$fixity}Meaning"]) ) {
-				throw new TOGoS_TOGVM_ParseError( "No '{$fixity}' meaning for '$symbol'", [$ast['sourceLocation']] );
-			}
-			$meaning = $operator["{$fixity}Meaning"];
+			// If the operator doesn't have a meaning for the way it is used,
+			// we'll make something up for simplificati purposes just
+			// to indicate it's not 'ignore' or 'statement-delimiter'.
+			$meaning = isset($operator["{$fixity}Meaning"]) ?
+				$operator["{$fixity}Meaning"] :
+				'something-normal';
 			
 			$simplifiedOperands = [];
 			foreach( $ast['operands'] as $k=>$operand ) {
