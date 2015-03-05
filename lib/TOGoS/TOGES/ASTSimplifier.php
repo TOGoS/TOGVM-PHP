@@ -25,8 +25,9 @@ class TOGoS_TOGES_ASTSimplifier
 			$fixity = self::operandNamesToFixity($operandNameStr);
 
 			// If the operator doesn't have a meaning for the way it is used,
-			// we'll make something up for simplificati purposes just
+			// we'll make something up for simplification purposes just
 			// to indicate it's not 'ignore' or 'statement-delimiter'.
+			// The simplifier doesn't care if it lacks meaning.
 			$meaning = isset($operator["{$fixity}Meaning"]) ?
 				$operator["{$fixity}Meaning"] :
 				'something-normal';
