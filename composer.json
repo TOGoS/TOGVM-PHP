@@ -16,7 +16,7 @@
 	],
 	"require": {
 		"php": ">=5.4",
-		"earthit/php-common": "^0.0.13",
+		"earthit/php-common": "^0.0.14",
 		"ryprop/nife": "^0.2"
 	},
 	"require-dev": {
