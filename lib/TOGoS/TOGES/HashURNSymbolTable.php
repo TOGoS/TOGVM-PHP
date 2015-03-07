@@ -8,10 +8,10 @@ class TOGoS_TOGES_HashURNSymbolTable extends TOGoS_TOGVM_FakeArray
 	public function offsetGet($k) {
 		if( preg_match('/^urn:(?:sha1|bitprint):([A-Z2-7]{32})/',$k) ) {
 			return [
-				'classUri' => 'http://ns.nuke24.net/TOGVM/Expressions/FunctionApplication',
-				'functionUri' => 'http://ns.nuke24.net/TOGVM/Functions/ResolveHashURN',
+				'classRef' => 'http://ns.nuke24.net/TOGVM/Expressions/FunctionApplication',
+				'functionRef' => 'http://ns.nuke24.net/TOGVM/Functions/ResolveHashURN',
 				'arguments' => [[
-					'classUri' => 'http://ns.nuke24.net/TOGVM/Expressions/LiteralString',
+					'classRef' => 'http://ns.nuke24.net/TOGVM/Expressions/LiteralString',
 					'literalValue' => $k
 				]]
 			];

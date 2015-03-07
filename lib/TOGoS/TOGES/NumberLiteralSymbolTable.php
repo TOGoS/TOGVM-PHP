@@ -11,11 +11,11 @@ class TOGoS_TOGES_NumberLiteralSymbolTable extends TOGoS_TOGVM_FakeArray
 	}
 	public function offsetGet($k) {
 		if( preg_match('/^'.self::BOOLEAN_REGEX.'$/', $k) ) {
-			return ['classUri'=>'http://ns.nuke24.net/TOGVM/Expressions/LiteralBoolean', 'literalValue'=>$k == 'true'];
+			return ['classRef'=>'http://ns.nuke24.net/TOGVM/Expressions/LiteralBoolean', 'literalValue'=>$k == 'true'];
 		} else if( preg_match('/^'.self::INTEGER_REGEX.'$/', $k) ) {
-			return ['classUri'=>'http://ns.nuke24.net/TOGVM/Expressions/LiteralInteger', 'literalValue'=>(int)$k];
+			return ['classRef'=>'http://ns.nuke24.net/TOGVM/Expressions/LiteralInteger', 'literalValue'=>(int)$k];
 		} else if( preg_match('/^'.self::NUMBER_REGEX.'$/', $k) ) {
-			return ['classUri'=>'http://ns.nuke24.net/TOGVM/Expressions/LiteralNumber', 'literalValue'=>(float)$k];
+			return ['classRef'=>'http://ns.nuke24.net/TOGVM/Expressions/LiteralNumber', 'literalValue'=>(float)$k];
 		} else {
 			throw new Exception("'$k' doesn't parse as a number or boolean");
 		}

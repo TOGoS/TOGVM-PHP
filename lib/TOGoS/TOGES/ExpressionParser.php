@@ -41,7 +41,7 @@ class TOGoS_TOGES_ExpressionParser
 				throw new Exception("Only string literals in AST supported; got ".json_encode($ast));
 			}
 			return array(
-				'classUri' => 'http://ns.nuke24.net/TOGVM/Expressions/LiteralString',
+				'classRef' => 'http://ns.nuke24.net/TOGVM/Expressions/LiteralString',
 				'literalValue' => $ast['value'],
 				'sourceLocation' => $ast['sourceLocation'],
 			);
@@ -59,22 +59,22 @@ class TOGoS_TOGES_ExpressionParser
 			}
 			$ods = implode(',',array_keys($ast['operands']));
 			$operator = $this->operatorsBySymbol[$ast['operatorSymbol']];
-			$functionUri = null;
-			if( $ods == 'inner' and isset($operator['circumfixMeaning']['functionUri']) ) {
+			$functionRef = null;
+			if( $ods == 'inner' and isset($operator['circumfixMeaning']['functionRef']) ) {
 				// Look for 1-ary function (circumfix or prefix)
-				$functionUri = $operator['circumfixMeaning']['functionUri'];
-			} else if( $ods == 'right' and isset($operator['infixMeaning']['functionUri']) ) {
+				$functionRef = $operator['circumfixMeaning']['functionRef'];
+			} else if( $ods == 'right' and isset($operator['infixMeaning']['functionRef']) ) {
 				// Look for 1-ary function (circumfix or prefix)
-				$functionUri = $operator['infixMeaning']['functionUri'];
-			} else if( $ods == 'left,right' and isset($operator['infixMeaning']['functionUri']) ) {
-				$functionUri = $operator['infixMeaning']['functionUri'];
+				$functionRef = $operator['infixMeaning']['functionRef'];
+			} else if( $ods == 'left,right' and isset($operator['infixMeaning']['functionRef']) ) {
+				$functionRef = $operator['infixMeaning']['functionRef'];
 			} else {
 				throw new Exception("Don't know how to convert ".count($ast['operands'])."-ary '".$ast['operatorSymbol']."'($ods) AST node to expression");
 			}
 			
 			$arguments = array();
 			
-			if( count($ast['operands'] == 1) and $functionUri == 'http://ns.nuke24.net/TOGVM/Functions/Identity' ) {
+			if( count($ast['operands'] == 1) and $functionRef == 'http://ns.nuke24.net/TOGVM/Functions/Identity' ) {
 				foreach( $ast['operands'] as $oper ) return $this->astToExpression($oper);
 			}
 			
@@ -92,11 +92,11 @@ class TOGoS_TOGES_ExpressionParser
 					else $arguments[] = $arg;
 				}
 			} else {
-				throw new Exception("Don't know how to deal with this: $functionUri, $ods");
+				throw new Exception("Don't know how to deal with this: $functionRef, $ods");
 			}
 			return array(
-				'classUri' => 'http://ns.nuke24.net/TOGVM/Expressions/FunctionApplication',
-				'functionUri' => $functionUri,
+				'classRef' => 'http://ns.nuke24.net/TOGVM/Expressions/FunctionApplication',
+				'functionRef' => $functionRef,
 				'arguments' => $arguments,
 				'sourceLocation' => $ast['sourceLocation'],
 			);

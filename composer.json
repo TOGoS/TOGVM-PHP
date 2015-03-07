@@ -5,7 +5,7 @@
 			"type": "package",
 			"package": {
 				"name": "togos/togvm-spec",
-				"version": "0.3.2",
+				"version": "0.4.0",
 				"source": {
 					"url": "https://github.com/TOGoS/TOGVM-Spec.git",
 					"type": "git",
@@ -21,7 +21,7 @@
 	},
 	"require-dev": {
 		"phpunit/phpunit": "^3.7",
-		"togos/togvm-spec": "0.3.*",
+		"togos/togvm-spec": "0.4.0",
 		"togos/php-n2r": "^0.0.5"
 	},
 	"autoload": {

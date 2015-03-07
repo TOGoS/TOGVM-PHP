@@ -9,7 +9,7 @@ class TOGoS_TOGVM_Interpreter
 	}
 	
 	public function evaluate( array $ast, array $ctx ) {
-		switch( $ast['classUri'] ) {
+		switch( $ast['classRef'] ) {
 		case 'http://ns.nuke24.net/TOGVM/Expressions/LiteralString':
 			return (string)$ast['literalValue'];
 		case 'http://ns.nuke24.net/TOGVM/Expressions/LiteralInteger':
@@ -29,14 +29,14 @@ class TOGoS_TOGVM_Interpreter
 		case 'http://ns.nuke24.net/TOGVM/Expressions/FunctionApplication':
 			if( isset($ast['function']) ) {
 				$function = $this->evaluate($ast['function'], $ctx);
-			} else if( isset($ast['functionUri']) ) {
-				if( isset($this->config['functions'][$ast['functionUri']]) ) {
-					$function = $this->config['functions'][$ast['functionUri']];
+			} else if( isset($ast['functionRef']) ) {
+				if( isset($this->config['functions'][$ast['functionRef']]) ) {
+					$function = $this->config['functions'][$ast['functionRef']];
 				} else {
-					throw new Exception("No function defined for '{$ast['functionUri']}'");
+					throw new Exception("No function defined for '{$ast['functionRef']}'");
 				}
 			} else {
-				throw new Exception("ApplyFunction expression does not define 'function' or 'functionUri'");
+				throw new Exception("ApplyFunction expression does not define 'function' or 'functionRef'");
 			}
 			$argumentValues = array();
 			foreach( $ast['arguments'] as $k=>$argument ) {
@@ -44,7 +44,7 @@ class TOGoS_TOGVM_Interpreter
 			}
 			return call_user_func($function, $argumentValues);
 		default:
-			throw new Exception("Unrecognized expression class URI: '{$ast['classUri']}'");
+			throw new Exception("Unrecognized expression class URI: '{$ast['classRef']}'");
 		}
 	}
 }
