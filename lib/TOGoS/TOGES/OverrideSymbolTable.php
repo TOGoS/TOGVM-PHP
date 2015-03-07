@@ -4,7 +4,7 @@ class TOGoS_TOGES_OverrideSymbolTable extends TOGoS_TOGVM_FakeArray
 {
 	protected $tables;
 	
-	public function __construct( $tables ) {
+	public function __construct( array $tables ) {
 		$this->tables = $tables;
 	}
 	
