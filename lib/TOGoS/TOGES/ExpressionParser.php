@@ -69,7 +69,10 @@ class TOGoS_TOGES_ExpressionParser
 			} else if( $ods == 'left,right' and isset($operator['infixMeaning']['functionRef']) ) {
 				$functionRef = $operator['infixMeaning']['functionRef'];
 			} else {
-				throw new Exception("Don't know how to convert ".count($ast['operands'])."-ary '".$ast['operatorSymbol']."'($ods) AST node to expression");
+				throw new TOGoS_TOGVM_CompileError(
+					"Don't know how to convert ".count($ast['operands'])."-ary '".$ast['operatorSymbol']."'($ods) AST node to expression",
+					array($ast['sourceLocation'])
+				);
 			}
 			
 			$arguments = array();
