@@ -12,4 +12,7 @@ class TOGoS_TOGVM_ScriptError extends Exception
 		$this->details = $details;
 		$this->scriptTrace = $trace;
 	}
+	
+	public function getDetails() { return $this->details; }
+	public function getScriptTrace() { return $this->scriptTrace; }
 }
