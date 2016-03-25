@@ -31,8 +31,33 @@ class TOGoS_TOGES_ExpressionTransformer
 			}
 			return $expr;
 		default:
-			// TODO: It's entirely 'arguments' that appear to be sub-expressions, we can handle that!
-			throw new Exception("Unrecognized expression class URI: '{$expr['classRef']}'");
+			$unrecognizedProps = [];
+			foreach( $expr as $propK=>$propV ) {
+				switch( $propK ) {
+				case 'classRef': case 'sourceLocation':
+					break;
+				case 'arguments':
+					if( is_array($propV) ) {
+						foreach( $propV as $argK=>$arg ) {
+							if( isset($arg['classRef']) ) {
+								$expr[$propK][$argK] = $this->transformRecursively( $arg, $preTransform, $postTransform );
+							} else {
+								$allPropertiresTransformable = false;
+							}
+						}
+						break;
+					}
+				default:
+					$unrecognizedProps[] = $propK;
+				}
+			}
+			
+			if( count($unrecognizedProps) == 0 ) return $expr; // Hey, we transformed it automatically!
+			
+			throw new Exception(
+				"Unrecognized expression class URI: '{$expr['classRef']}'; ".
+				"can't transform automatically because unrecognized properties: ".
+				implode(', ',$unrecognizedProps));
 		}
 	}
 	
