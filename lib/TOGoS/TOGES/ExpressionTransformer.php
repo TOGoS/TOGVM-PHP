@@ -24,10 +24,10 @@ class TOGoS_TOGES_ExpressionTransformer
 			return $expr;
 		case 'http://ns.nuke24.net/TOGVM/Expressions/FunctionApplication':
 			if( isset($expr['function']) ) {
-				$expr['function'] = self::transformRecursively( $expr['function'], $preTransform, $postTransform );
+				$expr['function'] = $this->transformRecursively( $expr['function'], $preTransform, $postTransform );
 			}
 			foreach( $expr['arguments'] as $k=>$argument ) {
-				$expr['arguments'][$k] = self::transformRecursively( $argument, $preTransform, $postTransform );
+				$expr['arguments'][$k] = $this->transformRecursively( $argument, $preTransform, $postTransform );
 			}
 			return $expr;
 		default:
