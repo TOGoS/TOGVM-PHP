@@ -175,9 +175,9 @@ class TOGoS_TOGES_Tokenizer
 			case '"': case '"':
 			case '‘': case '’': case '“': case '”':
 			case '‹': case '›': case '«': case '»':
-				throw new TOGoS_TOGCM_ParseError("Malplaced quote", array($this->getCharSourceLocation()));
+				throw new TOGoS_TOGVM_ParseError("Malplaced quote", array($this->getCharSourceLocation()));
 			case '\\':
-				throw new TOGoS_TOGCM_ParseError("Malplaced backslash", array($this->getCharSourceLocation()));
+				throw new TOGoS_TOGVM_ParseError("Malplaced backslash", array($this->getCharSourceLocation()));
 			}
 			
 			$this->tokenValue .= $c;

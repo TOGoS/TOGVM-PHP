@@ -24,4 +24,22 @@ class TOGoS_TOGES_TokenizerTest extends TOGoS_TOGVM_MultiTestCase
 	public function _testFilePair($source, $sourceFile, $expectedTokenJson, $expectedAstJsonFile) {
 		$this->_testTokenize(EarthIT_JSON::decode($expectedTokenJson), $source, basename($sourceFile));
 	}
+	
+	public function testParseError() {
+		$failures = array();
+		foreach( array(
+			"foo«bar",
+			"foo\\bar"
+		) as $source ) {
+			try {
+				$sourceLocation = array('filename'=>__FILE__, 'lineNumber'=>__LINE__, 'columnNumber'=>1);
+				$tokens = TOGoS_TOGES_Tokenizer::tokenize($source, $sourceLocation);
+				$failures[] = $source;
+			} catch( TOGoS_TOGVM_ParseError $e ) {
+				// that's the correct parse error!
+			}
+		}
+		
+		if( $failures ) $this->fail("Tokenizer should have thrown a ParseError for these: ".json_encode($failures));
+	}
 }
