@@ -4,7 +4,7 @@ class TOGoS_TOGVM_LiteralBooleanTest extends PHPUnit_Framework_TestCase
 {
 	protected function tp( $z, $s ) {
 		$expression = [
-			'classRef' => 'http://ns.nuke24.net/TOGVM/Expressions/LiteralBoolean',
+			'classRef' => 'http://ns.nuke24.net/TOGVM/Expression/LiteralBoolean',
 			'literalValue' => $s
 		];
 		$interp = new TOGoS_TOGVM_Interpreter([]);

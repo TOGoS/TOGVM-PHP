@@ -15,14 +15,14 @@ class TOGoS_TOGES_ExpressionTransformer
 	
 	protected function transformSubExpressionsRecursively( $expr, $preTransform, $postTransform ) {
 		switch( $expr['classRef'] ) {
-		case 'http://ns.nuke24.net/TOGVM/Expressions/LiteralString':
-		case 'http://ns.nuke24.net/TOGVM/Expressions/LiteralInteger':
-		case 'http://ns.nuke24.net/TOGVM/Expressions/LiteralNumber':
-		case 'http://ns.nuke24.net/TOGVM/Expressions/LiteralBoolean':
-		case 'http://ns.nuke24.net/TOGVM/Expressions/Variable':
+		case 'http://ns.nuke24.net/TOGVM/Expression/LiteralString':
+		case 'http://ns.nuke24.net/TOGVM/Expression/LiteralInteger':
+		case 'http://ns.nuke24.net/TOGVM/Expression/LiteralNumber':
+		case 'http://ns.nuke24.net/TOGVM/Expression/LiteralBoolean':
+		case 'http://ns.nuke24.net/TOGVM/Expression/Variable':
 			// No recursion to be done!
 			return $expr;
-		case 'http://ns.nuke24.net/TOGVM/Expressions/FunctionApplication':
+		case 'http://ns.nuke24.net/TOGVM/Expression/FunctionApplication':
 			if( isset($expr['function']) ) {
 				$expr['function'] = $this->transformRecursively( $expr['function'], $preTransform, $postTransform );
 			}

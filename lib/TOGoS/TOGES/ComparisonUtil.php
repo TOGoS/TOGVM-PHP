@@ -6,7 +6,7 @@
 class TOGoS_TOGES_ComparisonUtil
 {
 	public static function isComparisonOp( array $expr ) {
-		if( $expr['classRef'] != 'http://ns.nuke24.net/TOGVM/Expressions/FunctionApplication' ) return false;
+		if( $expr['classRef'] != 'http://ns.nuke24.net/TOGVM/Expression/FunctionApplication' ) return false;
 		
 		switch( $expr['functionRef'] ) {
 		case 'http://ns.nuke24.net/TOGVM/Functions/IsGreaterThanOrEqualTo':
@@ -70,7 +70,7 @@ class TOGoS_TOGES_ComparisonUtil
 		if( count($toBeAnded) == 1 ) return $toBeAnded[0];
 		
 		return array(
-			'classRef' => 'http://ns.nuke24.net/TOGVM/Expressions/FunctionApplication',
+			'classRef' => 'http://ns.nuke24.net/TOGVM/Expression/FunctionApplication',
 			'functionRef' => 'http://ns.nuke24.net/TOGVM/Functions/And',
 			'arguments' => $toBeAnded,
 			'sourceLocation' => isset($expr['sourceLocation']) ? $expr['sourceLocation'] : null,

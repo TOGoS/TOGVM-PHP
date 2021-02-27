@@ -10,13 +10,13 @@ class TOGoS_TOGVM_Interpreter
 	
 	public function evaluate( array $ast, array $ctx ) {
 		switch( $ast['classRef'] ) {
-		case 'http://ns.nuke24.net/TOGVM/Expressions/LiteralString':
+		case 'http://ns.nuke24.net/TOGVM/Expression/LiteralString':
 			return (string)$ast['literalValue'];
-		case 'http://ns.nuke24.net/TOGVM/Expressions/LiteralInteger':
+		case 'http://ns.nuke24.net/TOGVM/Expression/LiteralInteger':
 			return (int)$ast['literalValue'];
-		case 'http://ns.nuke24.net/TOGVM/Expressions/LiteralNumber':
+		case 'http://ns.nuke24.net/TOGVM/Expression/LiteralNumber':
 			return (float)$ast['literalValue'];
-		case 'http://ns.nuke24.net/TOGVM/Expressions/LiteralBoolean':
+		case 'http://ns.nuke24.net/TOGVM/Expression/LiteralBoolean':
 			$v = $ast['literalValue'];
 			if( is_bool($v) ) return $v;
 			if( $v === 'true' ) return true;
@@ -24,9 +24,9 @@ class TOGoS_TOGVM_Interpreter
 			if( $v === 0 or $v === '0' ) return false;
 			if( $v === 1 or $v === '1' ) return true;
 			throw new Exception("Unrecognized representation of literal boolean: {$v}");
-		case 'http://ns.nuke24.net/TOGVM/Expressions/Variable':
+		case 'http://ns.nuke24.net/TOGVM/Expression/Variable':
 			return $ctx['variableResolver'][$ast['variableName']];
-		case 'http://ns.nuke24.net/TOGVM/Expressions/FunctionApplication':
+		case 'http://ns.nuke24.net/TOGVM/Expression/FunctionApplication':
 			if( isset($ast['function']) ) {
 				$function = $this->evaluate($ast['function'], $ctx);
 			} else if( isset($ast['functionRef']) ) {

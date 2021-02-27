@@ -41,7 +41,7 @@ class TOGoS_TOGES_ExpressionParser
 				throw new Exception("Only string literals in AST supported; got ".json_encode($ast));
 			}
 			return array(
-				'classRef' => 'http://ns.nuke24.net/TOGVM/Expressions/LiteralString',
+				'classRef' => 'http://ns.nuke24.net/TOGVM/Expression/LiteralString',
 				'literalValue' => $ast['value'],
 				'sourceLocation' => $ast['sourceLocation'],
 			);
@@ -98,7 +98,7 @@ class TOGoS_TOGES_ExpressionParser
 				throw new Exception("Don't know how to deal with this: $functionRef, $ods");
 			}
 			return array(
-				'classRef' => 'http://ns.nuke24.net/TOGVM/Expressions/FunctionApplication',
+				'classRef' => 'http://ns.nuke24.net/TOGVM/Expression/FunctionApplication',
 				'functionRef' => $functionRef,
 				'arguments' => $arguments,
 				'sourceLocation' => $ast['sourceLocation'],

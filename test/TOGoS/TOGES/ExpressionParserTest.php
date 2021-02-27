@@ -17,7 +17,7 @@ class TOGoS_TOGES_ExpressionParserTest extends TOGoS_TOGVM_MultiTestCase
 		$ast = $this->parseAst($source, basename($sourceFile));
 		
 		$symbolTable = new TOGoS_TOGES_OverrideSymbolTable([
-			['forty two' => ['classRef'=>'http://ns.nuke24.net/TOGVM/Expressions/LiteralInteger','literalValue'=>42]],
+			['forty two' => ['classRef'=>'http://ns.nuke24.net/TOGVM/Expression/LiteralInteger','literalValue'=>42]],
 			new TOGoS_TOGES_NumberLiteralSymbolTable(),
 			new TOGoS_TOGES_HashURNSymbolTable(),
 			new TOGoS_TOGES_VariableSymbolTable()
