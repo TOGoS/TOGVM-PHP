@@ -1,6 +1,6 @@
 <?php
 
-abstract class TOGoS_TOGVM_TestCase extends PHPUnit_Framework_TestCase
+abstract class TOGoS_TOGVM_TestCase extends TOGoS_SimplerTest_TestCase
 {
 	protected function findTestVectorDirectory() {
 		for( $dir = __DIR__, $x=0; is_dir($dir) and $x<20; $dir = dirname($dir), ++$x ) {

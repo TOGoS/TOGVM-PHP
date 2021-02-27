@@ -19,4 +19,6 @@ vendor: composer.lock
 test-dependencies: vendor
 
 run-unit-tests: test-dependencies
-	vendor/bin/phpunit --bootstrap vendor/autoload.php test
+	vendor/bin/phpsimplertest --bootstrap vendor/autoload.php test
+run-unit-tests-colorfully: test-dependencies
+	vendor/bin/phpsimplertest --bootstrap vendor/autoload.php test --colorful-output

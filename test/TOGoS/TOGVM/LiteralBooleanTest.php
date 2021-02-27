@@ -1,6 +1,6 @@
 <?php
 
-class TOGoS_TOGVM_LiteralBooleanTest extends PHPUnit_Framework_TestCase
+class TOGoS_TOGVM_LiteralBooleanTest extends TOGoS_TOGVM_TestCase
 {
 	protected function tp( $z, $s ) {
 		$expression = [

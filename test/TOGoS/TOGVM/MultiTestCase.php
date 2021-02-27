@@ -54,4 +54,8 @@ abstract class TOGoS_TOGVM_MultiTestCase extends TOGoS_TOGVM_TestCase
 			$this->fail("No test vectors found");
 		}
 	}
+
+	protected function setName($testName) {
+		// No-op for PHPUnit compatibility
+	}
 }
